@@ -2,7 +2,7 @@ defmodule McaWeb.UserSocket do
   use Phoenix.Socket
 
   ## Channels
-  # channel "room:*", McaWeb.RoomChannel
+  channel "room:*", McaWeb.RoomChannel
 
   ## Transports
   transport :websocket, Phoenix.Transports.WebSocket
