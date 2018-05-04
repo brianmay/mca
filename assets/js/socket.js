@@ -57,6 +57,29 @@ let channel           = socket.channel("room:lobby", {})
 let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
 
+function to_html(o){
+    var str='';
+    if (typeof o == 'string'){
+        return o;
+    }
+
+    str += "<ul>"
+
+    for(var p in o){
+        str += "<li>"
+        if (o[p]) {
+            str+= p + ':</br>' + to_html(o[p]);
+        } else {
+            str+= p + ': nil;';
+        }
+        str += "</li>"
+    }
+
+    str += "</ul>"
+
+    return str;
+}
+
 chatInput.addEventListener("keypress", event => {
       if(event.keyCode === 13){
               channel.push("new_msg", {body: chatInput.value})
@@ -66,7 +89,8 @@ chatInput.addEventListener("keypress", event => {
 
 channel.on("new_msg", payload => {
       let messageItem = document.createElement("li")
-      messageItem.innerText = `[${Date()}] ${payload.body}`
+      messageItem.innerHTML = "Response: " + to_html(payload.body)
+      messagesContainer.innerHTML = ""
       messagesContainer.appendChild(messageItem)
 })
 

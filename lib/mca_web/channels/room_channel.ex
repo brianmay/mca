@@ -8,9 +8,9 @@ defmodule McaWeb.RoomChannel do
     {:error, %{reason: "unauthorized"}}
   end
   def handle_in("new_msg", %{"body" => body}, socket) do
-    broadcast! socket, "new_msg", %{body: "Please wait...."}
-    Process.sleep(5000)
-    broadcast! socket, "new_msg", %{body: body}
+    broadcast! socket, "new_msg", %{body: "Please wait again...."}
+    result = Ptv.search(body)
+    broadcast! socket, "new_msg", %{body: result}
     {:noreply, socket}
   end
 end
