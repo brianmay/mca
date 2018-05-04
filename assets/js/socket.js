@@ -59,7 +59,7 @@ let messagesContainer = document.querySelector("#messages")
 
 function to_html(o){
     var str='';
-    if (typeof o == 'string'){
+    if (!(o instanceof Object)){
         return o;
     }
 
@@ -68,7 +68,7 @@ function to_html(o){
     for(var p in o){
         str += "<li>"
         if (o[p]) {
-            str+= p + ':</br>' + to_html(o[p]);
+            str+= p + ': ' + to_html(o[p]);
         } else {
             str+= p + ': nil;';
         }
