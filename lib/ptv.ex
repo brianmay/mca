@@ -34,8 +34,21 @@ defmodule Ptv do
     |> Tesla.run(next)
   end
 
-  def search(search_term) do
-    get("/v3/search/" <> search_term)
+  defp check_result(result) do
+    case result.status do
+        200  -> { :ok, result.body }
+        _    -> { :error, result.body.message }
+    end
+  end
+
+  def search(search_term, query \\ []) do
+    get("/v3/search/" <> search_term, query: query)
+    |> check_result()
+  end
+
+  def get_directions(route_id, query \\ []) do
+    get("/v3/directions/route/" <> Integer.to_string(route_id), query: query)
+    |> check_result()
   end
 
 end

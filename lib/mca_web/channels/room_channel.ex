@@ -9,7 +9,7 @@ defmodule McaWeb.RoomChannel do
   end
   def handle_in("new_msg", %{"body" => body}, socket) do
     broadcast! socket, "new_msg", %{body: "Please wait again...."}
-    result = Ptv.search(body)
+    { :ok, result } = Ptv.search(body)
     broadcast! socket, "new_msg", %{body: result}
     {:noreply, socket}
   end
