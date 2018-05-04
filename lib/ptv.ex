@@ -40,12 +40,14 @@ defmodule Ptv do
   end
 
   def search(search_term, query \\ []) do
-    get("/v3/search/" <> search_term, query: query)
+    "/v3/search/" <> search_term
+    |> get(query: query)
     |> check_result()
   end
 
   def get_directions(route_id, query \\ []) do
-    get("/v3/directions/route/" <> Integer.to_string(route_id), query: query)
+    "/v3/directions/route/" <> Integer.to_string(route_id)
+    |> get(query: query)
     |> check_result()
   end
 
