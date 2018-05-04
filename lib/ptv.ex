@@ -6,7 +6,7 @@ defmodule Ptv do
   plug Tesla.Middleware.Headers, %{"User-Agent" => "tesla"}
   plug Tesla.Middleware.JSON
 
-  def get_signed_url(url, query) do
+  defp get_signed_url(url, query) do
     dev_id = Application.fetch_env!(:mca, :dev_id)
     key = Application.fetch_env!(:mca, :key)
 
