@@ -41,8 +41,8 @@ defmodule Mca.Mixfile do
       {:phoenix_live_reload, "~> 1.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 1.0"},
-      {:tesla, "~> 0.5.0"},
-      {:poison, ">= 1.0.0"}
+      {:tesla, "~> 0.10.0"},
+      {:poison, ">= 1.0.0"},
     ]
   end
 
