@@ -12,8 +12,6 @@ defmodule Ptv do
 
     query = Keyword.put(query, :devid, dev_id)
     url = Tesla.build_url(url, query)
-    IO.puts(key)
-    IO.puts(url)
     signature = :crypto.hmac(:sha, key, url)
     |> Base.encode16
     |> String.downcase
