@@ -20,7 +20,7 @@ defmodule Mca.Mixfile do
   def application do
     [
       mod: {Mca.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools],
     ]
   end
 
@@ -43,6 +43,7 @@ defmodule Mca.Mixfile do
       {:cowboy, "~> 1.0"},
       {:tesla, "~> 0.10.0"},
       {:poison, ">= 1.0.0"},
+      {:timex, "~> 3.1"},
     ]
   end
 
