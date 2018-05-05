@@ -36,6 +36,7 @@ defmodule Ptv do
   defp check_result(result) do
     case result.status do
         200  -> { :ok, result.body }
+        400  -> { :error, "Bad Request" }
         _    -> { :error, result.body.message }
     end
   end
