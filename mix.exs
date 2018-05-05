@@ -43,6 +43,7 @@ defmodule Mca.Mixfile do
       {:cowboy, "~> 1.0"},
       {:tesla, "~> 0.10.0"},
       {:poison, ">= 1.0.0"},
+      {:calendar, "~> 0.17.2"},
     ]
   end
 

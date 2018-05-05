@@ -1,6 +1,5 @@
 defmodule Ptv do
   use Tesla
-  use Timex
 
   plug :sign_url
   plug Tesla.Middleware.BaseUrl, "https://timetableapi.ptv.vic.gov.au"
@@ -42,8 +41,9 @@ defmodule Ptv do
   end
 
   def format_datetime(datetime) do
-    {:ok, datetime} = Timex.format(datetime, "{ISO:Basic:Z}")
     datetime
+    |> Calendar.DateTime.shift_zone!("Etc/UTC")
+    |> Calendar.DateTime.Format.iso8601
   end
 
   def format_datetime_query(query) do
