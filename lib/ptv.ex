@@ -51,7 +51,7 @@ defmodule Ptv do
   end
 
   def search(search_term, query \\ []) do
-    "/v3/search/" <> search_term
+    "/v3/search/" <> URI.encode(search_term)
     |> get(query: query)
     |> check_result()
   end
