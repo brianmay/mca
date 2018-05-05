@@ -47,7 +47,7 @@ defmodule Ptv do
   end
 
   def format_datetime_query(query) do
-    Keyword.update(query, :datetime_utc, nil, &format_datetime(&1))
+    Keyword.update(query, :date_utc, nil, &format_datetime(&1))
   end
 
   def search(search_term, query \\ []) do
