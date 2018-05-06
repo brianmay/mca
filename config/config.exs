@@ -7,15 +7,15 @@ use Mix.Config
 
 # General application configuration
 config :mca,
-  ecto_repos: [Mca.Repo]
+  ecto_repos: [Mca.Repo],
+  time_zone: "Australia/Melbourne"
 
 # Configures the endpoint
 config :mca, McaWeb.Endpoint,
   url: [host: "localhost"],
   secret_key_base: "HHb6p6CKDZVX/yZbtsmvETN6H9FJYng2y5O2cjcZV+xposY/8gOBNhl8SkdXPwer",
   render_errors: [view: McaWeb.ErrorView, accepts: ~w(html json)],
-  pubsub: [name: Mca.PubSub,
-           adapter: Phoenix.PubSub.PG2]
+  pubsub: [name: Mca.PubSub, adapter: Phoenix.PubSub.PG2]
 
 # Configures Elixir's Logger
 config :logger, :console,
@@ -24,4 +24,4 @@ config :logger, :console,
 
 # Import environment specific config. This must remain at the bottom
 # of this file so it overrides the configuration defined above.
-import_config "#{Mix.env}.exs"
+import_config "#{Mix.env()}.exs"
