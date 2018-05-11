@@ -99,12 +99,4 @@ defmodule Ptv do
     |> get(query: query)
     |> check_result()
   end
-
-  def get_city_direction(route_id) do
-    {:ok, %{"directions" => directions}} = Ptv.get_directions(route_id)
-
-    directions
-    |> Enum.find(&(Map.fetch!(&1, "direction_name") == "City (Flinders Street)"))
-    |> Map.fetch!("direction_id")
-  end
 end

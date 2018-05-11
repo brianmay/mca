@@ -1,4 +1,6 @@
-defmodule Planner do
+defmodule Ptv.Planner do
+  alias Ptv.Utils
+
   def do_result(first_stop, final_stop, departure, _run, pattern) do
     first_stop_name = Map.fetch!(first_stop, "stop_name")
     final_stop_name = Map.fetch!(final_stop, "stop_name")
@@ -99,62 +101,5 @@ defmodule Planner do
     Enum.each(plan, fn entry ->
       do_entry(entry)
     end)
-  end
-
-  def do_test do
-    direction_id = Ptv.get_city_direction(2)
-
-    plan = [
-      %{
-        # Upper Ferntree Gully Station
-        depart_stop_id: 1199,
-        # Train
-        route_type: 0,
-        # Belgrave Train line
-        route_id: 2,
-        search_params: [
-          date_utc: Utils.parse_time("07:47:00"),
-          direction_id: direction_id,
-          max_results: 1
-        ],
-        transfers: [
-          %{
-            arrive_stop_id: 1162,
-            transfer_time: 30,
-            depart_stop_id: 1162,
-            route_type: 0,
-            search_params: [
-              direction_id: direction_id,
-              max_results: 10
-            ],
-            transfers: [
-              %{
-                arrive_stop_id: 1071
-              }
-            ]
-          },
-          %{
-            arrive_stop_id: 1155,
-            transfer_time: 30,
-            depart_stop_id: 1155,
-            route_type: 0,
-            search_params: [
-              platform_numbers: 3,
-              max_results: 10
-            ],
-            transfers: [
-              %{
-                arrive_stop_id: 1071
-              }
-            ]
-          },
-          %{
-            arrive_stop_id: 1071
-          }
-        ]
-      }
-    ]
-
-    do_plan(plan)
   end
 end
