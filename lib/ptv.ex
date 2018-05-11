@@ -70,6 +70,12 @@ defmodule Ptv do
     |> check_result()
   end
 
+  def get_stop(stop_id, route_type, query \\ []) do
+    ("/v3/stops/" <> Integer.to_string(stop_id) <> "/route_type/" <> Integer.to_string(route_type))
+    |> get(query: query)
+    |> check_result()
+  end
+
   def get_pattern(run_id, route_type, query \\ []) do
     query = format_datetime_query(query)
 
@@ -92,5 +98,13 @@ defmodule Ptv do
     end
     |> get(query: query)
     |> check_result()
+  end
+
+  def get_city_direction(route_id) do
+    {:ok, %{"directions" => directions}} = Ptv.get_directions(route_id)
+
+    directions
+    |> Enum.find(&(Map.fetch!(&1, "direction_name") == "City (Flinders Street)"))
+    |> Map.fetch!("direction_id")
   end
 end
