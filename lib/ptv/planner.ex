@@ -1,7 +1,9 @@
 defmodule Ptv.Planner do
   alias Ptv.Utils
 
-  def do_result(first_stop, final_stop, departure, _run, pattern) do
+  def do_result(first_stop, final_stop, departure, _run, pattern, prev_leg_id) do
+    run_id = Map.fetch!(departure, "run_id")
+
     first_stop_name = Map.fetch!(first_stop, "stop_name")
     final_stop_name = Map.fetch!(final_stop, "stop_name")
 
@@ -14,7 +16,8 @@ defmodule Ptv.Planner do
 
     first_platform = Map.fetch!(departure, "platform_number")
 
-    IO.puts("----")
+    leg_id = {run_id, final_stop_id}
+    IO.puts("---- " <> inspect(leg_id) <> " " <> inspect(prev_leg_id))
 
     IO.puts(
       "#{first_stop_name} #{first_platform} #{Utils.format_datetime(depart_dt)} #{
@@ -23,16 +26,20 @@ defmodule Ptv.Planner do
     )
 
     IO.puts("#{final_stop_name} #{Utils.format_datetime(arrive_dt)} #{arrive_real_time}")
+
+    leg_id
   end
 
   def do_entry_departure(entry, first_stop, departure, run, pattern) do
+    prev_leg_id = Map.get(entry, :prev_leg_id)
+
     Enum.each(entry.transfers, fn transfer ->
       stop_id = transfer.arrive_stop_id
 
       route_type = Map.fetch!(run, "route_type")
       {:ok, %{"stop" => final_stop}} = Ptv.get_stop(stop_id, route_type)
       {_, arrive_dt} = Utils.estimate_arrival_time(pattern, stop_id)
-      do_result(first_stop, final_stop, departure, run, pattern)
+      leg_id = do_result(first_stop, final_stop, departure, run, pattern, prev_leg_id)
 
       depart_stop_id = Map.get(transfer, :depart_stop_id)
 
@@ -43,12 +50,16 @@ defmodule Ptv.Planner do
 
         search_params =
           Keyword.merge(
-            [date_utc: earliest_depart_time],
-            transfer.search_params
+            transfer.search_params,
+            date_utc: earliest_depart_time
           )
 
         transfer =
-          Map.merge(transfer, %{depart_stop_id: depart_stop_id, search_params: search_params})
+          Map.merge(transfer, %{
+            prev_leg_id: leg_id,
+            depart_stop_id: depart_stop_id,
+            search_params: search_params
+          })
 
         do_entry(transfer)
       end
