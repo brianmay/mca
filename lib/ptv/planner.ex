@@ -1,7 +1,41 @@
 defmodule Ptv.Planner do
-  alias Ptv.Utils
+  alias Ptv.Helpers
 
-  def do_result(first_stop, final_stop, departure, _run, pattern, prev_leg_id) do
+  defmodule Id do
+    @enforce_keys [
+      :run_id,
+      :final_stop_id
+    ]
+
+    defstruct run_id: nil,
+              final_stop_id: nil
+  end
+
+  defmodule Leg do
+    @enforce_keys [
+      :id,
+      :prev_id,
+      :first_stop_name,
+      :first_platform,
+      :depart_dt,
+      :depart_real_time,
+      :final_stop_name,
+      :arrive_dt,
+      :arrive_real_time
+    ]
+
+    defstruct id: %Id{run_id: nil, final_stop_id: nil},
+              prev_id: %Id{run_id: nil, final_stop_id: nil},
+              first_stop_name: nil,
+              first_platform: nil,
+              depart_dt: nil,
+              depart_real_time: nil,
+              final_stop_name: nil,
+              arrive_dt: nil,
+              arrive_real_time: nil
+  end
+
+  defp do_result(first_stop, final_stop, departure, _run, pattern, prev_leg_id, callback) do
     run_id = Map.fetch!(departure, "run_id")
 
     first_stop_name = Map.fetch!(first_stop, "stop_name")
@@ -10,27 +44,41 @@ defmodule Ptv.Planner do
     # first_stop_id = Map.fetch!(first_stop, "stop_id")
     final_stop_id = Map.fetch!(final_stop, "stop_id")
 
-    # departure = Utils.get_departure_from_pattern(pattern, first_stop_id)
-    {depart_real_time, depart_dt} = Utils.get_departure_dt(departure)
-    {arrive_real_time, arrive_dt} = Utils.estimate_arrival_time(pattern, final_stop_id)
+    # departure = Helpers.get_departure_from_pattern(pattern, first_stop_id)
+    {depart_real_time, depart_dt} = Helpers.get_departure_dt(departure)
+    {arrive_real_time, arrive_dt} = Helpers.estimate_arrival_time(pattern, final_stop_id)
 
     first_platform = Map.fetch!(departure, "platform_number")
 
-    leg_id = {run_id, final_stop_id}
-    IO.puts("---- " <> inspect(leg_id) <> " " <> inspect(prev_leg_id))
+    leg_id = %Id{run_id: run_id, final_stop_id: final_stop_id}
+    # IO.puts("---- " <> inspect(leg_id) <> " " <> inspect(prev_leg_id))
+    #
+    # IO.puts(
+    #   "#{first_stop_name} #{first_platform} #{Helpers.format_datetime(depart_dt)} #{
+    #     depart_real_time
+    #   } --> "
+    # )
+    #
+    # IO.puts("#{final_stop_name} #{Helpers.format_datetime(arrive_dt)} #{arrive_real_time}")
 
-    IO.puts(
-      "#{first_stop_name} #{first_platform} #{Utils.format_datetime(depart_dt)} #{
-        depart_real_time
-      } --> "
-    )
+    leg = %Leg{
+      id: leg_id,
+      prev_id: prev_leg_id,
+      first_stop_name: first_stop_name,
+      first_platform: first_platform,
+      depart_dt: Utils.format_datetime(depart_dt),
+      depart_real_time: depart_real_time,
+      final_stop_name: final_stop_name,
+      arrive_dt: Utils.format_datetime(arrive_dt),
+      arrive_real_time: arrive_real_time
+    }
 
-    IO.puts("#{final_stop_name} #{Utils.format_datetime(arrive_dt)} #{arrive_real_time}")
+    callback.(leg)
 
     leg_id
   end
 
-  def do_entry_departure(entry, first_stop, departure, run, pattern) do
+  defp do_entry_departure(entry, first_stop, departure, run, pattern, callback) do
     prev_leg_id = Map.get(entry, :prev_leg_id)
 
     Enum.each(entry.transfers, fn transfer ->
@@ -38,8 +86,8 @@ defmodule Ptv.Planner do
 
       route_type = Map.fetch!(run, "route_type")
       {:ok, %{"stop" => final_stop}} = Ptv.get_stop(stop_id, route_type)
-      {_, arrive_dt} = Utils.estimate_arrival_time(pattern, stop_id)
-      leg_id = do_result(first_stop, final_stop, departure, run, pattern, prev_leg_id)
+      {_, arrive_dt} = Helpers.estimate_arrival_time(pattern, stop_id)
+      leg_id = do_result(first_stop, final_stop, departure, run, pattern, prev_leg_id, callback)
 
       depart_stop_id = Map.get(transfer, :depart_stop_id)
 
@@ -61,33 +109,33 @@ defmodule Ptv.Planner do
             search_params: search_params
           })
 
-        do_entry(transfer)
+        do_entry(transfer, callback)
       end
     end)
   end
 
-  def do_check_departure_dt(entry, first_stop, departure, run, pattern) do
+  defp do_check_departure_dt(entry, first_stop, departure, run, pattern, callback) do
     earliest_depart_dt = Keyword.fetch!(entry.search_params, :date_utc)
-    {_, depart_dt} = Utils.get_departure_dt(departure)
+    {_, depart_dt} = Helpers.get_departure_dt(departure)
 
     if Calendar.DateTime.after?(depart_dt, earliest_depart_dt) do
-      do_entry_departure(entry, first_stop, departure, run, pattern)
+      do_entry_departure(entry, first_stop, departure, run, pattern, callback)
     end
   end
 
-  def do_entry_departures(entry, first_stop, departures, runs) do
+  defp do_entry_departures(entry, first_stop, departures, runs, callback) do
     Enum.each(departures, fn departure ->
       run_id = Map.fetch!(departure, "run_id")
       run = Map.fetch!(runs, Integer.to_string(run_id))
       route_type = Map.fetch!(run, "route_type")
 
-      {_, depart_dt} = Utils.get_departure_dt(departure)
+      {_, depart_dt} = Helpers.get_departure_dt(departure)
       {:ok, %{"departures" => pattern}} = Ptv.get_pattern(run_id, route_type, date_utc: depart_dt)
-      do_check_departure_dt(entry, first_stop, departure, run, pattern)
+      do_check_departure_dt(entry, first_stop, departure, run, pattern, callback)
     end)
   end
 
-  def do_entry(entry) do
+  defp do_entry(entry, callback) do
     route_type = entry.route_type
     route_id = Map.get(entry, :route_id)
     stop_id = entry.depart_stop_id
@@ -105,12 +153,12 @@ defmodule Ptv.Planner do
       )
 
     first_stop = Map.fetch!(stops, Integer.to_string(stop_id))
-    do_entry_departures(entry, first_stop, departures, runs)
+    do_entry_departures(entry, first_stop, departures, runs, callback)
   end
 
-  def do_plan(plan) do
+  def do_plan(plan, callback) do
     Enum.each(plan, fn entry ->
-      do_entry(entry)
+      do_entry(entry, callback)
     end)
   end
 end

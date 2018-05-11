@@ -7,6 +7,10 @@ defmodule Test do
     |> Map.fetch!("direction_id")
   end
 
+  def show_leg(leg) do
+    IO.puts(inspect(leg))
+  end
+
   def do_test do
     direction_id = get_city_direction(2)
 
@@ -61,6 +65,6 @@ defmodule Test do
       }
     ]
 
-    Ptv.Planner.do_plan(plan)
+    Ptv.Planner.do_plan(plan, &show_leg/1)
   end
 end
