@@ -141,12 +141,16 @@ defmodule Ptv.Planner do
 
   defp do_entry_departures(entry, first_stop, departures, runs, callback) do
     Enum.each(departures, fn departure ->
+      stop_id = Map.fetch!(departure, "stop_id")
       run_id = Map.fetch!(departure, "run_id")
       run = Map.fetch!(runs, Integer.to_string(run_id))
       route_type = Map.fetch!(run, "route_type")
 
       {_, depart_dt} = Helpers.get_departure_dt(departure)
       {:ok, %{"departures" => pattern}} = Ptv.get_pattern(run_id, route_type, date_utc: depart_dt)
+
+      # The pattern sometimes has more real time information then the departure.
+      departure = Helpers.get_departure_from_pattern(pattern, stop_id)
       do_check_departure_dt(entry, first_stop, departure, run, pattern, callback)
     end)
   end

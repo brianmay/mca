@@ -66,8 +66,16 @@ chatInput.addEventListener("keypress", event => {
 
 function display_leg(leg) {
     let text = "";
-    text += leg.depart_dt + " " + leg.depart_real_time + " Depart: " + leg.first_stop_name + " " + leg.first_platform + "<br/>\n";
-    text += "<b>" + leg.arrive_dt + "</b> " + leg.arrive_real_time + " Arrive: <b>" + leg.final_stop_name + "</b><br/>\n"
+    let depart_class="";
+    if (leg.depart_real_time) {
+        depart_class="realtime"
+    }
+    let arrive_class="";
+    if (leg.arrive_real_time) {
+        arrive_class="realtime"
+    }
+    text += `<div class="${depart_class}">` + leg.depart_dt + "</div> " + " " + leg.first_stop_name + " " + leg.first_platform + "<br/>\n";
+    text += `<div class="${arrive_class}">` + leg.arrive_dt + "</div> " + " " + leg.final_stop_name + "<br/>\n"
     return text;
 }
 
