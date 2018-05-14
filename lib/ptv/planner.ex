@@ -1,20 +1,14 @@
 defmodule Ptv.Planner do
   alias Ptv.Helpers
 
-  defmodule Id do
-    @enforce_keys [
-      :run_id,
-      :final_stop_id
-    ]
-
-    defstruct run_id: nil,
-              final_stop_id: nil
+  defp generate_id(%{:run_id => run_id, :final_stop_id => final_stop_id}) do
+    "#{run_id}/#{final_stop_id}"
   end
 
   defmodule Leg do
     @enforce_keys [
-      :id,
-      :prev_id,
+      :leg_id,
+      :prev_leg_id,
       :first_stop_name,
       :first_platform,
       :depart_dt,
@@ -24,18 +18,28 @@ defmodule Ptv.Planner do
       :arrive_real_time
     ]
 
-    defstruct id: %Id{run_id: nil, final_stop_id: nil},
-              prev_id: %Id{run_id: nil, final_stop_id: nil},
+    defstruct leg_id: nil,
+              prev_leg_id: nil,
               first_stop_name: nil,
               first_platform: nil,
               depart_dt: nil,
               depart_real_time: nil,
               final_stop_name: nil,
               arrive_dt: nil,
-              arrive_real_time: nil
+              arrive_real_time: nil,
+              final_leg: nil
   end
 
-  defp do_result(first_stop, final_stop, departure, _run, pattern, prev_leg_id, callback) do
+  defp do_result(
+         first_stop,
+         final_stop,
+         departure,
+         _run,
+         pattern,
+         prev_leg_id,
+         callback,
+         final_leg
+       ) do
     run_id = Map.fetch!(departure, "run_id")
 
     first_stop_name = Map.fetch!(first_stop, "stop_name")
@@ -50,7 +54,7 @@ defmodule Ptv.Planner do
 
     first_platform = Map.fetch!(departure, "platform_number")
 
-    leg_id = %Id{run_id: run_id, final_stop_id: final_stop_id}
+    leg_id = generate_id(%{run_id: run_id, final_stop_id: final_stop_id})
     # IO.puts("---- " <> inspect(leg_id) <> " " <> inspect(prev_leg_id))
     #
     # IO.puts(
@@ -62,15 +66,16 @@ defmodule Ptv.Planner do
     # IO.puts("#{final_stop_name} #{Helpers.format_datetime(arrive_dt)} #{arrive_real_time}")
 
     leg = %Leg{
-      id: leg_id,
-      prev_id: prev_leg_id,
+      leg_id: leg_id,
+      prev_leg_id: prev_leg_id,
       first_stop_name: first_stop_name,
       first_platform: first_platform,
       depart_dt: Utils.format_datetime(depart_dt),
       depart_real_time: depart_real_time,
       final_stop_name: final_stop_name,
       arrive_dt: Utils.format_datetime(arrive_dt),
-      arrive_real_time: arrive_real_time
+      arrive_real_time: arrive_real_time,
+      final_leg: final_leg
     }
 
     callback.(leg)
@@ -87,9 +92,20 @@ defmodule Ptv.Planner do
       route_type = Map.fetch!(run, "route_type")
       {:ok, %{"stop" => final_stop}} = Ptv.get_stop(stop_id, route_type)
       {_, arrive_dt} = Helpers.estimate_arrival_time(pattern, stop_id)
-      leg_id = do_result(first_stop, final_stop, departure, run, pattern, prev_leg_id, callback)
 
       depart_stop_id = Map.get(transfer, :depart_stop_id)
+
+      leg_id =
+        do_result(
+          first_stop,
+          final_stop,
+          departure,
+          run,
+          pattern,
+          prev_leg_id,
+          callback,
+          is_nil(depart_stop_id)
+        )
 
       if not is_nil(depart_stop_id) do
         transfer_time = transfer.transfer_time
@@ -118,7 +134,7 @@ defmodule Ptv.Planner do
     earliest_depart_dt = Keyword.fetch!(entry.search_params, :date_utc)
     {_, depart_dt} = Helpers.get_departure_dt(departure)
 
-    if Calendar.DateTime.after?(depart_dt, earliest_depart_dt) do
+    if not Calendar.DateTime.before?(depart_dt, earliest_depart_dt) do
       do_entry_departure(entry, first_stop, departure, run, pattern, callback)
     end
   end

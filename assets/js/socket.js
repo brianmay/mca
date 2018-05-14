@@ -57,29 +57,6 @@ let channel           = socket.channel("room:lobby", {})
 let chatInput         = document.querySelector("#chat-input")
 let messagesContainer = document.querySelector("#messages")
 
-function to_html(o){
-    var str='';
-    if (!(o instanceof Object)){
-        return o;
-    }
-
-    str += "<ul>"
-
-    for(var p in o){
-        str += "<li>"
-        if (o[p]) {
-            str+= p + ': ' + to_html(o[p]);
-        } else {
-            str+= p + ': nil;';
-        }
-        str += "</li>"
-    }
-
-    str += "</ul>"
-
-    return str;
-}
-
 chatInput.addEventListener("keypress", event => {
       if(event.keyCode === 13){
               channel.push("new_msg", {body: chatInput.value})
@@ -87,11 +64,90 @@ chatInput.addEventListener("keypress", event => {
             }
 })
 
+function display_leg(leg) {
+    let text = "";
+    text += leg.depart_dt + " " + leg.depart_real_time + " Depart: " + leg.first_stop_name + " " + leg.first_platform + "<br/>\n";
+    text += "<b>" + leg.arrive_dt + "</b> " + leg.arrive_real_time + " Arrive: <b>" + leg.final_stop_name + "</b><br/>\n"
+    return text;
+}
+
+function display_route(route) {
+    let td_nodes = [];
+    for (let i = 0; i < route.length; i++) {
+        let leg = route[i]
+        let text = display_leg(leg);
+
+        let td_node = document.createElement("td");
+        td_node.innerHTML = text;
+        td_nodes.push(td_node);
+    }
+    return td_nodes;
+}
+
+function display_routes(routes) {
+    messagesContainer.innerHTML = "";
+    let table = document.createElement("table");
+    table.setAttribute("border", "1");
+    messagesContainer.appendChild(table);
+
+    for (let i = 0; i < routes.length; i++) {
+        let route = routes[i]
+        let td_nodes = display_route(route);
+
+        let tr_node = document.createElement("tr");
+        table.appendChild(tr_node);
+        for (let j = 0; j < td_nodes.length; j++) {
+            tr_node.appendChild(td_nodes[j]);
+        }
+    }
+}
+
+function get_route_from_leg(legs, leg) {
+    let list = [];
+    if (leg.prev_leg_id) {
+        let prev_leg = legs[leg.prev_leg_id]
+        list = list.concat(get_route_from_leg(legs, prev_leg));
+    }
+    list.push(leg);
+    return list;
+}
+
+
+let legs = {};
+let routes = [];
+
+
 channel.on("new_msg", payload => {
-      let messageItem = document.createElement("li")
-      messageItem.innerHTML = "Response: " + to_html(payload.body)
-      messagesContainer.innerHTML = ""
-      messagesContainer.appendChild(messageItem)
+      let leg = payload.body;
+      legs[leg.leg_id] = leg;
+
+      if (leg.final_leg) {
+          let route = get_route_from_leg(legs, leg)
+          routes.push(route)
+
+          routes.sort(
+              function(x, y) {
+                  let a=x.slice(-1)[0];
+                  let b=y.slice(-1)[0];
+                  let result;
+                  if (!a || !b) {
+                      result=0;
+                  }
+                  else if (a.arrive_dt>b.arrive_dt) {
+                      result = 1;
+                  }
+                  else if (a.arrive_dt<b.arrive_dt) {
+                      result = -1;
+                  }
+                  else {
+                      result = 0;
+                  }
+                  return result;
+              }
+          );
+
+          display_routes(routes)
+      }
 })
 
 channel.join()

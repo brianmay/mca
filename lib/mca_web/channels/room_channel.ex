@@ -10,10 +10,12 @@ defmodule McaWeb.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body" => _body}, socket) do
-    broadcast!(socket, "new_msg", %{body: "Please wait again...."})
+    # broadcast!(socket, "new_msg", %{body: "Please wait again...."})
 
+    IO.puts("starting...")
     plan = get_plan()
     Ptv.Planner.do_plan(plan, &broadcast!(socket, "new_msg", %{"body" => &1}))
+    IO.puts("done...")
 
     {:noreply, socket}
   end
@@ -30,7 +32,7 @@ defmodule McaWeb.RoomChannel do
         # Belgrave Train line
         route_id: 2,
         search_params: [
-          date_utc: Utils.parse_time("07:47:00"),
+          date_utc: Utils.parse_time("07:55:00"),
           direction_id: direction_id,
           max_results: 1
         ],
