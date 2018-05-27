@@ -32,14 +32,14 @@ defmodule McaWeb.RoomChannel do
         # Belgrave Train line
         route_id: 2,
         search_params: [
-          date_utc: Utils.parse_time("07:55:00"),
+          date_utc: Utils.parse_time("07:53:00"),
           direction_id: direction_id,
           max_results: 1
         ],
         transfers: [
           %{
             arrive_stop_id: 1162,
-            transfer_time: 30,
+            transfer_time: 0,
             depart_stop_id: 1162,
             route_type: 0,
             search_params: [
@@ -54,7 +54,7 @@ defmodule McaWeb.RoomChannel do
           },
           %{
             arrive_stop_id: 1155,
-            transfer_time: 30,
+            transfer_time: 60,
             depart_stop_id: 1155,
             route_type: 0,
             search_params: [

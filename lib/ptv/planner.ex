@@ -48,7 +48,7 @@ defmodule Ptv.Planner do
     # first_stop_id = Map.fetch!(first_stop, "stop_id")
     final_stop_id = Map.fetch!(final_stop, "stop_id")
 
-    # departure = Helpers.get_departure_from_pattern(pattern, first_stop_id)
+    # departure = Helpers.get_departure_from_pattern!(pattern, first_stop_id)
     {depart_real_time, depart_dt} = Helpers.get_departure_dt(departure)
     {arrive_real_time, arrive_dt} = Helpers.estimate_arrival_time(pattern, final_stop_id)
 
@@ -83,49 +83,80 @@ defmodule Ptv.Planner do
     leg_id
   end
 
-  defp do_entry_departure(entry, first_stop, departure, run, pattern, callback) do
+  defp do_entry_connection(entry, first_stop, departure, run, pattern, transfer, callback) do
+    stop_id = transfer.arrive_stop_id
+    route_type = Map.fetch!(run, "route_type")
+    run_id = Map.fetch!(departure, "run_id")
+
+    {:ok, %{"stop" => final_stop}} = Ptv.get_stop(stop_id, route_type)
+    {_, arrive_dt} = Helpers.estimate_arrival_time(pattern, stop_id)
+
+    depart_stop_id = Map.get(transfer, :depart_stop_id)
     prev_leg_id = Map.get(entry, :prev_leg_id)
 
-    Enum.each(entry.transfers, fn transfer ->
-      stop_id = transfer.arrive_stop_id
+    leg_id =
+      do_result(
+        first_stop,
+        final_stop,
+        departure,
+        run,
+        pattern,
+        prev_leg_id,
+        callback,
+        is_nil(depart_stop_id)
+      )
 
-      route_type = Map.fetch!(run, "route_type")
-      {:ok, %{"stop" => final_stop}} = Ptv.get_stop(stop_id, route_type)
-      {_, arrive_dt} = Helpers.estimate_arrival_time(pattern, stop_id)
+    if not is_nil(depart_stop_id) do
+      transfer_time = transfer.transfer_time
 
-      depart_stop_id = Map.get(transfer, :depart_stop_id)
+      earliest_depart_time = Calendar.DateTime.add!(arrive_dt, transfer_time)
 
-      leg_id =
-        do_result(
-          first_stop,
-          final_stop,
-          departure,
-          run,
-          pattern,
-          prev_leg_id,
-          callback,
-          is_nil(depart_stop_id)
+      search_params =
+        Keyword.merge(
+          transfer.search_params,
+          date_utc: earliest_depart_time
         )
 
-      if not is_nil(depart_stop_id) do
-        transfer_time = transfer.transfer_time
+      ignore_run_ids =
+        Map.get(entry, :ignore_run_ids)
+        |> case do
+          nil -> MapSet.new()
+          value -> value
+        end
+        |> MapSet.put(run_id)
 
-        earliest_depart_time = Calendar.DateTime.add!(arrive_dt, transfer_time)
+      transfer =
+        Map.merge(transfer, %{
+          prev_leg_id: leg_id,
+          depart_stop_id: depart_stop_id,
+          search_params: search_params,
+          ignore_run_ids: ignore_run_ids
+        })
 
-        search_params =
-          Keyword.merge(
-            transfer.search_params,
-            date_utc: earliest_depart_time
-          )
+      do_entry(transfer, callback)
+    end
+  end
 
-        transfer =
-          Map.merge(transfer, %{
-            prev_leg_id: leg_id,
-            depart_stop_id: depart_stop_id,
-            search_params: search_params
-          })
+  defp do_entry_departure(entry, first_stop, departure, run, pattern, callback) do
+    Enum.each(entry.transfers, fn transfer ->
+      stop_id = transfer.arrive_stop_id
+      final_departure = Helpers.get_departure_from_pattern(pattern, stop_id)
 
-        do_entry(transfer, callback)
+      # found_transfer =
+      #   case next_departure do
+      #     nil ->
+      #       false
+      #
+      #     _ ->
+      #       run_id = Map.fetch!(run, "run_id")
+      #       next_run_id = Map.fetch!(next_departure, "run_id")
+      #       run_id != next_run_id
+      #   end
+
+      if not is_nil(final_departure) do
+        do_entry_connection(entry, first_stop, departure, run, pattern, transfer, callback)
+      else
+        IO.puts("Service does not stop at #{stop_id}.")
       end
     end)
   end
@@ -133,9 +164,24 @@ defmodule Ptv.Planner do
   defp do_check_departure_dt(entry, first_stop, departure, run, pattern, callback) do
     earliest_depart_dt = Keyword.fetch!(entry.search_params, :date_utc)
     {_, depart_dt} = Helpers.get_departure_dt(departure)
+    run_id = Map.fetch!(departure, "run_id")
 
-    if not Calendar.DateTime.before?(depart_dt, earliest_depart_dt) do
-      do_entry_departure(entry, first_stop, departure, run, pattern, callback)
+    ignore_run_ids =
+      Map.get(entry, :ignore_run_ids)
+      |> case do
+        nil -> MapSet.new()
+        value -> value
+      end
+
+    cond do
+      Calendar.DateTime.before?(depart_dt, earliest_depart_dt) ->
+        IO.puts("Service leaves too early.")
+
+      MapSet.member?(ignore_run_ids, run_id) ->
+        IO.puts("Service is ignored; we have already this run.")
+
+      true ->
+        do_entry_departure(entry, first_stop, departure, run, pattern, callback)
     end
   end
 
@@ -150,7 +196,7 @@ defmodule Ptv.Planner do
       {:ok, %{"departures" => pattern}} = Ptv.get_pattern(run_id, route_type, date_utc: depart_dt)
 
       # The pattern sometimes has more real time information then the departure.
-      departure = Helpers.get_departure_from_pattern(pattern, stop_id)
+      departure = Helpers.get_departure_from_pattern!(pattern, stop_id)
       do_check_departure_dt(entry, first_stop, departure, run, pattern, callback)
     end)
   end

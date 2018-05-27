@@ -74,8 +74,8 @@ function display_leg(leg) {
     if (leg.arrive_real_time) {
         arrive_class="realtime"
     }
-    text += `<div class="${depart_class}">` + leg.depart_dt + "</div> " + " " + leg.first_stop_name + " " + leg.first_platform + "<br/>\n";
-    text += `<div class="${arrive_class}">` + leg.arrive_dt + "</div> " + " " + leg.final_stop_name + "<br/>\n"
+    text += `<span class="${depart_class}">` + leg.depart_dt + "</span> " + " " + leg.first_stop_name + " " + leg.first_platform + "<br/>\n";
+    text += `<span class="${arrive_class}">` + leg.arrive_dt + "</span> " + " " + leg.final_stop_name + "<br/>\n"
     return text;
 }
 

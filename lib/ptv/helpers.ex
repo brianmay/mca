@@ -14,24 +14,30 @@ defmodule Ptv.Helpers do
   end
 
   def get_departure_from_pattern(pattern, stop_id) do
-    result =
-      pattern
-      |> Enum.find(&(Map.fetch!(&1, "stop_id") == stop_id))
+    pattern
+    |> Enum.find(&(Map.fetch!(&1, "stop_id") == stop_id))
+  end
 
+  def get_departure_from_pattern!(pattern, stop_id) do
+    result = get_departure_from_pattern(pattern, stop_id)
     %{} = result
   end
 
-  def get_prev_departure_from_pattern(pattern, stop_id) do
+  def get_prev_departure_from_pattern!(pattern, stop_id) do
     index = Enum.find_index(pattern, &(Map.fetch!(&1, "stop_id") == stop_id))
 
     if index <= 0 do
       raise "Cannot get stop before first stop"
     end
 
-    Enum.at(pattern, index - 1)
+    if is_nil(index) do
+      nil
+    else
+      Enum.at(pattern, index - 1)
+    end
   end
 
-  def get_next_departure_from_pattern(pattern, stop_id) do
+  def get_next_departure_from_pattern!(pattern, stop_id) do
     index = Enum.find_index(pattern, &(Map.fetch!(&1, "stop_id") == stop_id))
 
     if index >= length(pattern) do
@@ -51,15 +57,17 @@ defmodule Ptv.Helpers do
       {1181, 1071} => 4 * 60
     }
 
-    prev_stop = get_prev_departure_from_pattern(pattern, stop_id)
+    prev_stop = get_prev_departure_from_pattern!(pattern, stop_id)
     prev_stop_id = Map.fetch!(prev_stop, "stop_id")
     {real_time, datetime} = get_departure_dt(prev_stop)
     add_seconds = Map.get(times, {prev_stop_id, stop_id})
 
     if is_nil(add_seconds) do
-      departure = get_departure_from_pattern(pattern, stop_id)
+      IO.puts("#{prev_stop_id} --> #{stop_id} ---> using departure time")
+      departure = get_departure_from_pattern!(pattern, stop_id)
       get_departure_dt(departure)
     else
+      IO.puts("#{prev_stop_id} --> #{stop_id} ---> adding #{datetime} + #{add_seconds}")
       {real_time, Calendar.DateTime.add!(datetime, add_seconds)}
     end
   end
