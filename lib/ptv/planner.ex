@@ -142,17 +142,6 @@ defmodule Ptv.Planner do
       stop_id = transfer.arrive_stop_id
       final_departure = Helpers.get_departure_from_pattern(pattern, stop_id)
 
-      # found_transfer =
-      #   case next_departure do
-      #     nil ->
-      #       false
-      #
-      #     _ ->
-      #       run_id = Map.fetch!(run, "run_id")
-      #       next_run_id = Map.fetch!(next_departure, "run_id")
-      #       run_id != next_run_id
-      #   end
-
       if not is_nil(final_departure) do
         do_entry_connection(entry, first_stop, departure, run, pattern, transfer, callback)
       else
