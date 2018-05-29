@@ -63,11 +63,11 @@ defmodule Ptv.Helpers do
     add_seconds = Map.get(times, {prev_stop_id, stop_id})
 
     if is_nil(add_seconds) do
-      IO.puts("#{prev_stop_id} --> #{stop_id} ---> using departure time")
+      # IO.puts("#{prev_stop_id} --> #{stop_id} ---> using departure time")
       departure = get_departure_from_pattern!(pattern, stop_id)
       get_departure_dt(departure)
     else
-      IO.puts("#{prev_stop_id} --> #{stop_id} ---> adding #{datetime} + #{add_seconds}")
+      # IO.puts("#{prev_stop_id} --> #{stop_id} ---> adding #{datetime} + #{add_seconds}")
       {real_time, Calendar.DateTime.add!(datetime, add_seconds)}
     end
   end

@@ -14,7 +14,7 @@ defmodule McaWeb.RoomChannel do
 
     IO.puts("starting...")
     plan = get_plan()
-    Ptv.Planner.do_plan(plan, &broadcast!(socket, "new_msg", %{"body" => &1}))
+    Ptv.Planner.do_plan(plan, &push(socket, "new_msg", %{"body" => &1}))
     IO.puts("done...")
 
     {:noreply, socket}

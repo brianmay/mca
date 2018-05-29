@@ -142,6 +142,17 @@ defmodule Ptv.Planner do
       stop_id = transfer.arrive_stop_id
       final_departure = Helpers.get_departure_from_pattern(pattern, stop_id)
 
+      # found_transfer =
+      #   case next_departure do
+      #     nil ->
+      #       false
+      #
+      #     _ ->
+      #       run_id = Map.fetch!(run, "run_id")
+      #       next_run_id = Map.fetch!(next_departure, "run_id")
+      #       run_id != next_run_id
+      #   end
+
       if not is_nil(final_departure) do
         do_entry_connection(entry, first_stop, departure, run, pattern, transfer, callback)
       else
@@ -180,6 +191,7 @@ defmodule Ptv.Planner do
       run_id = Map.fetch!(departure, "run_id")
       run = Map.fetch!(runs, Integer.to_string(run_id))
       route_type = Map.fetch!(run, "route_type")
+      IO.puts("----> " <> inspect(stop_id))
 
       {_, depart_dt} = Helpers.get_departure_dt(departure)
       {:ok, %{"departures" => pattern}} = Ptv.get_pattern(run_id, route_type, date_utc: depart_dt)
@@ -187,6 +199,7 @@ defmodule Ptv.Planner do
       # The pattern sometimes has more real time information then the departure.
       departure = Helpers.get_departure_from_pattern!(pattern, stop_id)
       do_check_departure_dt(entry, first_stop, departure, run, pattern, callback)
+      IO.puts("<---- " <> inspect(stop_id))
     end)
   end
 
@@ -198,6 +211,10 @@ defmodule Ptv.Planner do
     query =
       entry.search_params
       |> Keyword.put(:expand, "run\nstop")
+
+    IO.puts("")
+    IO.puts("--------------")
+    IO.puts("000" <> inspect(stop_id))
 
     {:ok, %{"departures" => departures, "runs" => runs, "stops" => stops}} =
       Ptv.get_departures(
