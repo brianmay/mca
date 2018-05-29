@@ -4,6 +4,7 @@ import { Table, Jumbotron, Button, Row, Col } from 'reactstrap'
 import { Socket, Channel } from "phoenix"
 import * as classNames from 'classnames'
 
+
 function get_route_from_leg(legs, leg) {
   let list = [];
   if (leg.prev_leg_id) {
@@ -12,6 +13,43 @@ function get_route_from_leg(legs, leg) {
   }
   list.push(leg);
   return list;
+}
+
+
+function get_routes_from_legs(legs) {
+  let routes = []
+
+  for (const leg_id in legs) {
+    if (legs.hasOwnProperty(leg_id)) {
+      let leg = legs[leg_id];
+      if (leg.final_leg) {
+        let route = get_route_from_leg(legs, leg)
+        routes.push(route)
+      }
+    }
+  }
+
+  routes.sort(
+    function(x, y) {
+      let a = x.slice(-1)[0];
+      let b = y.slice(-1)[0];
+      let result;
+      if (!a || !b) {
+        result = 0;
+      }
+      else if (a.arrive_dt > b.arrive_dt) {
+        result = 1;
+      }
+      else if (a.arrive_dt < b.arrive_dt) {
+        result = -1;
+      }
+      else {
+        result = 0;
+      }
+      return result;
+    })
+
+    return routes
 }
 
 
@@ -31,7 +69,6 @@ interface RoutesProps {
 
 interface State {
   legs: any
-  routes: any[]
 }
 
 
@@ -39,8 +76,8 @@ class Leg extends React.Component<LegProps, {}> {
 
   public render(): JSX.Element {
     let leg = this.props.leg;
-    let depart_classname = classNames({ 'real-time': leg.depart_real_time });
-    let arrive_classname = classNames({ 'real-time': leg.arrive_real_time });
+    let depart_classname = classNames({ 'realtime': leg.depart_real_time });
+    let arrive_classname = classNames({ 'realtime': leg.arrive_real_time });
 
     return (
       <td>
@@ -92,7 +129,6 @@ export default class Home extends React.Component<{}, State> {
 
     this.state = {
       legs: {},
-      routes: [],
     }
 
     const socket = new Socket("/socket")
@@ -117,48 +153,21 @@ export default class Home extends React.Component<{}, State> {
   process_msg(payload) {
     let leg = payload.body;
     let new_legs = Object.assign({}, this.state.legs);
-    let new_routes = Object.assign([], this.state.routes);
 
     new_legs[leg.leg_id] = leg;
 
-    if (leg.final_leg) {
-      let route = get_route_from_leg(new_legs, leg)
-      new_routes.push(route)
-
-      new_routes.sort(
-        function(x, y) {
-          let a = x.slice(-1)[0];
-          let b = y.slice(-1)[0];
-          let result;
-          if (!a || !b) {
-            result = 0;
-          }
-          else if (a.arrive_dt > b.arrive_dt) {
-            result = 1;
-          }
-          else if (a.arrive_dt < b.arrive_dt) {
-            result = -1;
-          }
-          else {
-            result = 0;
-          }
-          return result;
-        }
-      )
-    }
-
-    console.log("Setting new state", new_legs, new_routes)
+    console.log("Setting new state", new_legs)
     this.setState({
       legs: new_legs,
-      routes: new_routes,
     })
   }
 
   public render(): JSX.Element {
+    const routes = get_routes_from_legs(this.state.legs);
     return (
       <div>
         <Button color="primary" onClick={() => { this.reload() }}>Reload</Button>
-        <Routes routes={this.state.routes} />
+        <Routes routes={routes} />
       </div>
     )
   }
