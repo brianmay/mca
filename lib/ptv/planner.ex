@@ -4,9 +4,10 @@ defmodule Ptv.Planner do
   defp generate_id(%{
          :route_type => route_type,
          :run_id => run_id,
+         :first_stop_id => first_stop_id,
          :final_stop_id => final_stop_id
        }) do
-    "#{route_type}/#{run_id}/#{final_stop_id}"
+    "#{route_type}/#{run_id}/#{first_stop_id}-#{final_stop_id}"
   end
 
   defmodule Leg do
@@ -50,7 +51,7 @@ defmodule Ptv.Planner do
     first_stop_name = Map.fetch!(first_stop, "stop_name")
     final_stop_name = Map.fetch!(final_stop, "stop_name")
 
-    # first_stop_id = Map.fetch!(first_stop, "stop_id")
+    first_stop_id = Map.fetch!(first_stop, "stop_id")
     final_stop_id = Map.fetch!(final_stop, "stop_id")
 
     # departure = Helpers.get_departure_from_pattern!(pattern, first_stop_id)
@@ -59,7 +60,14 @@ defmodule Ptv.Planner do
 
     first_platform = Map.fetch!(departure, "platform_number")
 
-    leg_id = generate_id(%{route_type: route_type, run_id: run_id, final_stop_id: final_stop_id})
+    leg_id =
+      generate_id(%{
+        route_type: route_type,
+        run_id: run_id,
+        first_stop_id: first_stop_id,
+        final_stop_id: final_stop_id
+      })
+
     # IO.puts("---- " <> inspect(leg_id) <> " " <> inspect(prev_leg_id))
     #
     # IO.puts(
