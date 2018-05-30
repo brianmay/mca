@@ -3,12 +3,47 @@ import { Link, RouteComponentProps } from 'react-router-dom'
 import { Table, Jumbotron, Button, Row, Col } from 'reactstrap'
 import { Socket, Channel } from "phoenix"
 import * as classNames from 'classnames'
+import * as Immutable from 'immutable';
 
 
-function get_route_from_leg(legs, leg) {
+
+interface Leg {
+  leg_id: string
+  prev_leg_id: string
+  final_leg: boolean
+  depart_real_time: boolean
+  arrive_real_time: boolean
+  depart_dt: String
+  arrive_dt: String
+  first_stop_name: String
+  final_stop_name: String
+  first_platform: String
+}
+
+type Route = Leg[];
+type LegsState = Immutable.Map<string, Leg>
+
+interface LegProps {
+  leg: Leg
+}
+
+interface RouteProps {
+  route: Route
+}
+
+interface RoutesProps {
+  routes: Route[]
+}
+
+interface State {
+  legs: LegsState
+}
+
+
+function get_route_from_leg(legs : LegsState, leg : Leg) : Route {
   let list = [];
   if (leg.prev_leg_id) {
-    let prev_leg = legs[leg.prev_leg_id]
+    let prev_leg = legs.get(leg.prev_leg_id)
     list = list.concat(get_route_from_leg(legs, prev_leg));
   }
   list.push(leg);
@@ -16,63 +51,36 @@ function get_route_from_leg(legs, leg) {
 }
 
 
-function get_routes_from_legs(legs) {
-  let routes = []
+function get_routes_from_legs(legs : LegsState) : Route[] {
+  let routes = legs
+    .valueSeq()
+    .toArray()
+    .filter(leg => leg.final_leg)
+    .map(leg => get_route_from_leg(legs, leg))
+    .sort(
+      function(x, y) {
+        let a = x.slice(-1)[0];
+        let b = y.slice(-1)[0];
+        let result;
+        if (!a || !b) {
+          result = 0;
+        }
+        else if (a.arrive_dt > b.arrive_dt) {
+          result = 1;
+        }
+        else if (a.arrive_dt < b.arrive_dt) {
+          result = -1;
+        }
+        else {
+          result = 0;
+        }
+        return result;
+      })
 
-  for (const leg_id in legs) {
-    if (legs.hasOwnProperty(leg_id)) {
-      let leg = legs[leg_id];
-      if (leg.final_leg) {
-        let route = get_route_from_leg(legs, leg)
-        routes.push(route)
-      }
-    }
-  }
-
-  routes.sort(
-    function(x, y) {
-      let a = x.slice(-1)[0];
-      let b = y.slice(-1)[0];
-      let result;
-      if (!a || !b) {
-        result = 0;
-      }
-      else if (a.arrive_dt > b.arrive_dt) {
-        result = 1;
-      }
-      else if (a.arrive_dt < b.arrive_dt) {
-        result = -1;
-      }
-      else {
-        result = 0;
-      }
-      return result;
-    })
-
-    return routes
+  return routes
 }
 
-
-interface LegProps {
-  leg: any
-}
-
-interface RouteProps {
-  route: any
-}
-
-interface RoutesProps {
-  routes: any[]
-}
-
-
-
-interface State {
-  legs: any
-}
-
-
-class Leg extends React.Component<LegProps, {}> {
+class LegComponent extends React.Component<LegProps, {}> {
 
   public render(): JSX.Element {
     let leg = this.props.leg;
@@ -88,21 +96,21 @@ class Leg extends React.Component<LegProps, {}> {
   }
 }
 
-class Route extends React.Component<RouteProps, {}> {
+class RouteComponent extends React.Component<RouteProps, {}> {
 
   public render(): JSX.Element {
     let route = this.props.route;
     return (
       <tr>
         {route.map((leg) =>
-          <Leg key={leg.leg_id} leg={leg} />
+          <LegComponent key={leg.leg_id} leg={leg} />
         )}
       </tr>
     )
   }
 }
 
-class Routes extends React.Component<RoutesProps, {}> {
+class RoutesComponent extends React.Component<RoutesProps, {}> {
 
   public render(): JSX.Element {
     let routes = this.props.routes;
@@ -110,7 +118,7 @@ class Routes extends React.Component<RoutesProps, {}> {
       <Table>
         <tbody>
           {routes.map((route) =>
-            <Route  key={route[route.length - 1].leg_id} route={route} />
+            <RouteComponent  key={route[route.length - 1].leg_id} route={route} />
           )}
         </tbody>
       </Table>
@@ -125,10 +133,8 @@ export default class Home extends React.Component<{}, State> {
   constructor(props) {
     super(props)
 
-    console.log("I am here!!!!!!")
-
     this.state = {
-      legs: {},
+      legs: Immutable.Map<string, Leg>(),
     }
 
     const socket = new Socket("/socket")
@@ -152,9 +158,9 @@ export default class Home extends React.Component<{}, State> {
 
   process_msg(payload) {
     let leg = payload.body;
-    let new_legs = Object.assign({}, this.state.legs);
+    let new_legs = this.state.legs;
 
-    new_legs[leg.leg_id] = leg;
+    new_legs = new_legs.set(leg.leg_id, leg);
 
     console.log("Setting new state", new_legs)
     this.setState({
@@ -167,7 +173,7 @@ export default class Home extends React.Component<{}, State> {
     return (
       <div>
         <Button color="primary" onClick={() => { this.reload() }}>Reload</Button>
-        <Routes routes={routes} />
+        <RoutesComponent routes={routes} />
       </div>
     )
   }
