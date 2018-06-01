@@ -39,7 +39,7 @@ defmodule McaWeb.RoomChannel do
         # Belgrave Train line
         route_id: 2,
         search_params: [
-          date_utc: Utils.parse_time("07:53:00"),
+          date_utc: Utils.parse_time("07:29:00"),
           direction_id: direction_id,
           max_results: 1
         ],

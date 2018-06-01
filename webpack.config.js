@@ -1,7 +1,7 @@
 const path = require('path')
 const webpack = require('webpack')
 const { CheckerPlugin } = require('awesome-typescript-loader')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 
@@ -10,16 +10,12 @@ const CopyWebpackPlugin = require('copy-webpack-plugin')
 const env = process.env.MIX_ENV === 'prod' ? 'production' : 'development'
 
 const plugins = {
-  production: [
-    // Only run in production. Produce minified JS.
-    new webpack.optimize.UglifyJsPlugin({
-      compress: {warnings: false}
-    })
-  ],
+  production: [],
   development: []
 }
 
 module.exports = {
+  mode: env,
   devtool: 'source-map',
   entry: [
     path.join(__dirname, 'assets/js/app.tsx'),
@@ -30,7 +26,7 @@ module.exports = {
     filename: 'js/app.js'
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.tsx?$/,
         loaders: ['awesome-typescript-loader'],
@@ -39,14 +35,12 @@ module.exports = {
       },
       {
         test: /\.scss$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            { loader: 'css-loader', options: { importLoaders: 1 } },
-            'postcss-loader', // for minifying CSS/adding vendor prefixes
-            'sass-loader'
-          ]
-        })
+        use: [
+          env=="development" ? 'style-loader' : MiniCssExtractPlugin.loader,
+          'css-loader',
+          'postcss-loader',
+          'sass-loader',
+        ]
       },
       {
         test: /\.(png|woff|woff2|eot|ttf|svg)$/,
@@ -65,20 +59,16 @@ module.exports = {
     new CleanWebpackPlugin([
       path.join(__dirname, 'priv/static')
     ]),
-    // Important to keep React file size down
-    new webpack.DefinePlugin({
-      'process.env': {
-        'NODE_ENV': JSON.stringify(env)
-      }
-    }),
     // Type checker for `awesome-typescript-loader`
     new CheckerPlugin(),
     // Add this plugin so Webpack won't output the files when anything errors
     // during the build process
     new webpack.NoEmitOnErrorsPlugin(),
-    new ExtractTextPlugin({
-      filename: 'css/app.css',
-      allChunks: true
+    new MiniCssExtractPlugin({
+      // Options similar to the same options in webpackOptions.output
+      // both options are optional
+      filename: "[name].css",
+      chunkFilename: "[id].css"
     }),
     new CopyWebpackPlugin([
       { from: path.join(__dirname, 'assets', 'static') }
