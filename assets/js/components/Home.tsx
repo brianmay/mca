@@ -1,10 +1,9 @@
 import * as React from 'react'
 import { Link, RouteComponentProps } from 'react-router-dom'
-import { Table, Jumbotron, Button, Row, Col } from 'reactstrap'
+import { Alert, Table, Button } from 'reactstrap'
 import { Socket, Channel } from "phoenix"
 import * as classNames from 'classnames'
 import * as Immutable from 'immutable';
-
 
 
 interface Leg {
@@ -37,6 +36,8 @@ interface RoutesProps {
 
 interface State {
   legs: LegsState
+  is_running: boolean
+  error: string
 }
 
 
@@ -134,7 +135,9 @@ export default class Home extends React.Component<{}, State> {
     super(props)
 
     this.state = {
+      is_running: false,
       legs: Immutable.Map<string, Leg>(),
+      error: null,
     }
 
     const socket = new Socket("/socket")
@@ -154,25 +157,53 @@ export default class Home extends React.Component<{}, State> {
 
   reload() {
     this.channel.push("new_msg", { body: "Penguins are evil." })
+    let new_state: State = Object.assign({}, this.state)
+    new_state.legs = Immutable.Map<string, Leg>()
+    new_state.is_running = true
+    this.setState(new_state)
   }
 
   process_msg(payload) {
-    let leg = payload.body;
-    let new_legs = this.state.legs;
+    let type = payload.type
+    let new_state: State = Object.assign({}, this.state)
+    switch (type) {
+      case "start":
+        new_state.legs = Immutable.Map<string, Leg>()
+        new_state.is_running = true
+        new_state.error = null
+        break
 
-    new_legs = new_legs.set(leg.leg_id, leg);
+      case "finish":
+        new_state.is_running = false;
+        break
 
-    console.log("Setting new state", new_legs)
-    this.setState({
-      legs: new_legs,
-    })
+      case "error":
+        new_state.is_running = false;
+        new_state.error = payload.message
+        break
+
+      case "leg":
+        let leg = payload.leg;
+        new_state.legs = this.state.legs.set(leg.leg_id, leg);
+        break;
+    }
+
+    this.setState(new_state)
   }
 
   public render(): JSX.Element {
     const routes = get_routes_from_legs(this.state.legs);
+    let error: JSX.Element = null;
+    if (this.state.error) {
+      error = <Alert color="danger">{ this.state.error }</Alert>
+    } else if (this.state.is_running) {
+      error =  <Alert color="warning">Fetching results.</Alert>
+    }
+    let classname = classNames({ 'running': this.state.is_running });
     return (
-      <div>
-        <Button color="primary" onClick={() => { this.reload() }}>Reload</Button>
+      <div className={classname}>
+        <Button color="primary" onClick={() => { this.reload() }} disabled={this.state.is_running}>Reload</Button>
+        {error}
         <RoutesComponent routes={routes} />
       </div>
     )

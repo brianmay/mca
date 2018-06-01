@@ -10,12 +10,19 @@ defmodule McaWeb.RoomChannel do
   end
 
   def handle_in("new_msg", %{"body" => _body}, socket) do
-    # broadcast!(socket, "new_msg", %{body: "Please wait again...."})
-
-    IO.puts("starting...")
-    plan = get_plan()
-    Ptv.Planner.do_plan(plan, &push(socket, "new_msg", %{"body" => &1}))
-    IO.puts("done...")
+    try do
+      IO.puts("starting...")
+      plan = get_plan()
+      push(socket, "new_msg", %{"type" => "start"})
+      Ptv.Planner.do_plan(plan, &push(socket, "new_msg", %{"type" => "leg", "leg" => &1}))
+      push(socket, "new_msg", %{"type" => "finish"})
+      IO.puts("done...")
+    rescue
+      exception ->
+        stacktrace = System.stacktrace()
+        push(socket, "new_msg", %{"type" => "error", "message" => exception.message})
+        reraise exception, stacktrace
+    end
 
     {:noreply, socket}
   end

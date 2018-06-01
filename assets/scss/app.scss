@@ -2,5 +2,9 @@
 @import "~bootstrap/scss/bootstrap";
 
 .realtime {
-    font-weight: bold;
+    color: green;
+}
+
+.running {
+  background-color: grey;
 }
