@@ -20,7 +20,7 @@ defmodule McaWeb.RoomChannel do
     rescue
       exception ->
         stacktrace = System.stacktrace()
-        push(socket, "new_msg", %{"type" => "error", "message" => exception.message})
+        push(socket, "new_msg", %{"type" => "error", "message" => inspect(exception)})
         reraise exception, stacktrace
     end
 

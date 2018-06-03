@@ -38,7 +38,7 @@ defmodule Ptv do
     case result.status do
       200 -> {:ok, result.body}
       400 -> {:error, "Bad Request"}
-      _ -> {:error, result.body.message}
+      _ -> {:error, Map.get(result.body, "Message")}
     end
   end
 
