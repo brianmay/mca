@@ -36,9 +36,19 @@ defmodule Ptv do
 
   defp check_result(result) do
     case result.status do
-      200 -> {:ok, result.body}
-      400 -> {:error, "Bad Request"}
-      _ -> {:error, Map.get(result.body, "Message")}
+      200 ->
+        {:ok, result.body}
+
+      400 ->
+        {:error, "Bad Request"}
+
+      500 ->
+        IO.puts("The PTV server generated a 500 error. " <> inspect(result))
+        {:error, Map.get(result.body, "Message")}
+
+      _ ->
+        IO.puts("The PTV server generated an unknown error. " <> inspect(result))
+        {:error, Map.get(result.body, "Message")}
     end
   end
 
