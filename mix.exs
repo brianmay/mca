@@ -44,6 +44,9 @@ defmodule Mca.Mixfile do
       {:tesla, "~> 0.10.0"},
       {:poison, ">= 1.0.0"},
       {:calendar, "~> 0.17.2"},
+      {:guardian, "~> 1.0"},
+      {:comeonin, "~> 4.0"},
+      {:bcrypt_elixir, "~> 1.0"}
     ]
   end
 

@@ -140,27 +140,32 @@ export default class Home extends React.Component<{}, State> {
       error: null,
     }
 
-    const socket = new Socket("/socket")
-    socket.connect()
-    const channel = socket.channel("room:lobby", {})
+    if (document.querySelector("meta[name=token]")) {
+      const jwt = document.querySelector("meta[name=token]")['content'];
+      const socket = new Socket("/socket", {params: {token: jwt}});
 
-    channel.on("new_msg", this.process_msg.bind(this))
+      socket.connect();
+      const channel = socket.channel("room:lobby", {})
 
-    channel.join()
-      .receive("ok", resp => {
-        console.log("Joined successfully", resp)
-      })
-      .receive("error", resp => { console.log("Unable to join", resp) })
+      channel.join()
+        .receive("ok", resp => { console.log("Joined successfully", resp) })
+        .receive("error", resp => { console.log("Unable to join", resp) })
+      channel.on("new_msg", this.process_msg.bind(this))
 
-    this.channel = channel;
+      this.channel = channel;
+    } else {
+      this.channel = null;
+    }
   }
 
   reload() {
-    this.channel.push("new_msg", { body: "Penguins are evil." })
-    let new_state: State = Object.assign({}, this.state)
-    new_state.legs = Immutable.Map<string, Leg>()
-    new_state.is_running = true
-    this.setState(new_state)
+    if (this.channel) {
+      this.channel.push("new_msg", { body: "Penguins are evil." })
+      let new_state: State = Object.assign({}, this.state)
+      new_state.is_running = true
+      new_state.legs = Immutable.Map<string, Leg>()
+      this.setState(new_state)
+    }
   }
 
   process_msg(payload) {
