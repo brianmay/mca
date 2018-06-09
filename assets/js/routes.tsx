@@ -5,6 +5,6 @@ import Home from './components/Home'
 
 export const routes = (
   <Root>
-    <Route exact path="/connections" component={ Home } />
+    <Route exact path="/planner" component={ Home } />
   </Root>
 )

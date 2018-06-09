@@ -2,9 +2,45 @@
 @import "~bootstrap/scss/bootstrap";
 
 .realtime {
-    color: green;
+  color: green;
 }
 
 .running {
-  background-color: grey;
+  background-color: lightgrey;
+}
+
+.logo {
+  background-image: url("/images/mca-logo-128.png");
+  background-repeat: no-repeat;
+  height: 130px;
+  padding-left: 140px;
+}
+
+.login {
+  form {
+    padding: 20px;
+  }
+}
+@media all and (min-width: 480px) {
+  .login {
+    background-image: url("/images/login-background.jpg");
+    background-size: cover;
+    position: fixed;
+    padding: 0;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    index: 10;
+
+    form {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 450px;
+      background-color: white;
+      border-radius: 25px;
+    }
+  }
 }

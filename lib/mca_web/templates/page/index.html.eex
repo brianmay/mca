@@ -1,7 +1,15 @@
-<h2>Login Page</h2>
-<%= if @maybe_user == nil do %>
+<div class="login">
   <%= form_for @changeset, @action, fn f -> %>
-
+    <h1 class="logo">Misleading Connection Advisor</h1>
+    <%= if get_flash(@conn, :info) do %>
+    <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
+    <% end %>
+    <%= if get_flash(@conn, :error) do %>
+    <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
+    <% end %>
+    <%= if get_flash(@conn, :success) do %>
+    <p class="alert alert-success" role="alert"><%= get_flash(@conn, :success) %></p>
+    <% end %>
     <div class="form-group">
       <%= label f, :email, class: "control-label" %>
       <%= text_input f, :email, class: "form-control" %>
@@ -16,9 +24,4 @@
       <%= submit "Submit", class: "btn btn-primary" %>
     </div>
   <% end %>
-<% else %>
-  <h1>Hello <%= @maybe_user.email%>!</h1>
-  <%= form_tag(page_path(@conn, :logout), method: :post) %>
-    <%= submit "Logout", class: "btn btn-primary" %>
-  </form>
-<% end %>
+</div>

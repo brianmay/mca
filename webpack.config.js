@@ -36,24 +36,37 @@ module.exports = {
       {
         test: /\.scss$/,
         use: [
-          env=="development" ? 'style-loader' : MiniCssExtractPlugin.loader,
+          MiniCssExtractPlugin.loader,
           'css-loader',
           'postcss-loader',
           'sass-loader',
         ]
       },
       {
-        test: /\.(png|woff|woff2|eot|ttf|svg)$/,
+        test: /\.(png|woff|woff2|eot|ttf|svg|jpg)$/,
         use: [
           {
             loader: 'url-loader',
             options: {
-              limit: 10000
+              limit: 10000,
+              outputPath: 'images/',
             }
           }
         ]
       }
     ]
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        styles: {
+          name: 'styles',
+          test: /\.css$/,
+          chunks: 'all',
+          enforce: true
+        }
+      }
+    }
   },
   plugins: [
     new CleanWebpackPlugin([
@@ -67,8 +80,7 @@ module.exports = {
     new MiniCssExtractPlugin({
       // Options similar to the same options in webpackOptions.output
       // both options are optional
-      filename: "[name].css",
-      chunkFilename: "[id].css"
+      filename: "css/app.css",
     }),
     new CopyWebpackPlugin([
       { from: path.join(__dirname, 'assets', 'static') }

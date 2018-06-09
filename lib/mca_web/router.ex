@@ -26,13 +26,14 @@ defmodule McaWeb.Router do
     pipe_through([:browser, :auth])
     get("/", PageController, :index)
     post("/", PageController, :login)
+    get("/logout", PageController, :logout_form)
     post("/logout", PageController, :logout)
   end
 
   # Definitely logged in scope
   scope "/", McaWeb do
     pipe_through([:browser, :auth, :ensure_auth])
-    get("/connections", PageController, :authenticated)
+    get("/planner", PageController, :authenticated)
   end
 
   # Other scopes may use custom stacks.

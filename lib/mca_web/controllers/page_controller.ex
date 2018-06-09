@@ -5,25 +5,24 @@ defmodule McaWeb.PageController do
   alias Mca.Auth.User
   alias Mca.Auth.Guardian
 
-  def index(conn, _params) do
+  def unauthenticated(conn, _params) do
     changeset = Auth.change_user(%User{})
-    maybe_user = Guardian.Plug.current_resource(conn)
-
-    message =
-      if maybe_user != nil do
-        "Someone is logged in"
-      else
-        "No one is logged in"
-      end
 
     conn
-    |> put_flash(:info, message)
     |> render(
       "index.html",
       changeset: changeset,
-      action: page_path(conn, :login),
-      maybe_user: maybe_user
+      action: page_path(conn, :login)
     )
+  end
+
+  def index(conn, params) do
+    maybe_user = Guardian.Plug.current_resource(conn)
+
+    case maybe_user do
+      nil -> unauthenticated(conn, params)
+      _ -> authenticated(conn, params)
+    end
   end
 
   def login(conn, %{"user" => %{"email" => email, "password" => password}}) do
@@ -42,6 +41,13 @@ defmodule McaWeb.PageController do
     |> put_flash(:success, "Welcome back!")
     |> Guardian.Plug.sign_in(user)
     |> redirect(to: "/")
+  end
+
+  def logout_form(conn, _params) do
+    maybe_user = Guardian.Plug.current_resource(conn)
+
+    conn
+    |> render("logout.html", maybe_user: maybe_user)
   end
 
   def logout(conn, _) do
