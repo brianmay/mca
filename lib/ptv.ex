@@ -6,6 +6,7 @@ defmodule Ptv do
   plug(Tesla.Middleware.Headers, %{"User-Agent" => "tesla"})
   plug(Tesla.Middleware.JSON)
 
+  @spec get_signed_url(String.t(), list()) :: String.t()
   defp get_signed_url(url, query) do
     dev_id = Application.fetch_env!(:mca, :dev_id)
     key = Application.fetch_env!(:mca, :key)
@@ -22,18 +23,21 @@ defmodule Ptv do
     Tesla.build_url(url, query)
   end
 
+  @spec apply_signed_url(map) :: map
   defp apply_signed_url(env) do
     env
     |> Map.put(:url, get_signed_url(env.url, env.query))
     |> Map.put(:query, [])
   end
 
+  @spec sign_url(map, term, keyword) :: map
   def sign_url(env, next, _options \\ []) do
     env
     |> apply_signed_url()
     |> Tesla.run(next)
   end
 
+  @spec check_result(map) :: {:error, String.t()} | {:ok, map}
   defp check_result(result) do
     case result.status do
       200 ->
@@ -52,40 +56,47 @@ defmodule Ptv do
     end
   end
 
+  @spec format_datetime(DateTime.t()) :: String.t()
   defp format_datetime(datetime) do
     datetime
     |> Calendar.DateTime.shift_zone!("Etc/UTC")
     |> Calendar.DateTime.Format.iso8601()
   end
 
+  @spec format_datetime_query(keyword) :: keyword
   defp format_datetime_query(query) do
     Keyword.update(query, :date_utc, nil, &format_datetime(&1))
   end
 
+  @spec parse_datetime(String.t()) :: DateTime.t()
   def parse_datetime(datetime) do
     {:ok, datetime, 0} = Calendar.NaiveDateTime.Parse.iso8601(datetime)
     {:ok, datetime} = Calendar.DateTime.from_naive(datetime, "Etc/UTC")
     datetime
   end
 
+  @spec search(String.t(), keyword) :: {:error, String.t()} | {:ok, map}
   def search(search_term, query \\ []) do
     ("/v3/search/" <> URI.encode(search_term))
     |> get(query: query)
     |> check_result()
   end
 
+  @spec get_directions(number, keyword) :: {:error, String.t()} | {:ok, map}
   def get_directions(route_id, query \\ []) do
     ("/v3/directions/route/" <> Integer.to_string(route_id))
     |> get(query: query)
     |> check_result()
   end
 
+  @spec get_stop(number, number, keyword) :: {:error, String.t()} | {:ok, map}
   def get_stop(stop_id, route_type, query \\ []) do
     ("/v3/stops/" <> Integer.to_string(stop_id) <> "/route_type/" <> Integer.to_string(route_type))
     |> get(query: query)
     |> check_result()
   end
 
+  @spec get_pattern(number, number, keyword) :: {:error, String.t()} | {:ok, map}
   def get_pattern(run_id, route_type, query \\ []) do
     query = format_datetime_query(query)
 
@@ -95,6 +106,7 @@ defmodule Ptv do
     |> check_result()
   end
 
+  @spec get_departures(number, number, number | nil, keyword) :: {:error, String.t()} | {:ok, map}
   def get_departures(route_type, stop_id, route_id \\ nil, query \\ []) do
     query = format_datetime_query(query)
 

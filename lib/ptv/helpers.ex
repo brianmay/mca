@@ -1,4 +1,5 @@
 defmodule Ptv.Helpers do
+  @spec get_departure_dt(map) :: {boolean, DateTime.t()}
   def get_departure_dt(%{"estimated_departure_utc" => departure_time})
       when not is_nil(departure_time) do
     {true, Ptv.parse_datetime(departure_time)}
@@ -13,16 +14,19 @@ defmodule Ptv.Helpers do
     raise "No time supplied in departure details"
   end
 
+  @spec get_departure_from_pattern(list(), number) :: map | nil
   def get_departure_from_pattern(pattern, stop_id) do
     pattern
     |> Enum.find(&(Map.fetch!(&1, "stop_id") == stop_id))
   end
 
+  @spec get_departure_from_pattern!(list(), number) :: map
   def get_departure_from_pattern!(pattern, stop_id) do
     result = get_departure_from_pattern(pattern, stop_id)
     %{} = result
   end
 
+  @spec get_prev_departure_from_pattern!(list(), number) :: map
   def get_prev_departure_from_pattern!(pattern, stop_id) do
     index = Enum.find_index(pattern, &(Map.fetch!(&1, "stop_id") == stop_id))
 
@@ -37,6 +41,7 @@ defmodule Ptv.Helpers do
     end
   end
 
+  @spec get_next_departure_from_pattern!(list(), number) :: map
   def get_next_departure_from_pattern!(pattern, stop_id) do
     index = Enum.find_index(pattern, &(Map.fetch!(&1, "stop_id") == stop_id))
 
@@ -47,6 +52,7 @@ defmodule Ptv.Helpers do
     Enum.at(pattern, index + 1)
   end
 
+  @spec estimate_arrival_time(list, number) :: {boolean, DateTime.t()}
   def estimate_arrival_time(pattern, stop_id) do
     times = %{
       # Richmond -> Flinders Street Station

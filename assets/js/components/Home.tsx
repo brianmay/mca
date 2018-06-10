@@ -1,5 +1,4 @@
 import * as React from 'react'
-import { Link, RouteComponentProps } from 'react-router-dom'
 import { Alert, Table, Button } from 'reactstrap'
 import { Socket, Channel } from "phoenix"
 import * as classNames from 'classnames'
@@ -9,7 +8,7 @@ import * as Immutable from 'immutable';
 interface Leg {
   leg_id: string
   prev_leg_id: string
-  final_leg: boolean
+  is_final_leg: boolean
   depart_real_time: boolean
   arrive_real_time: boolean
   depart_dt: String
@@ -56,7 +55,7 @@ function get_routes_from_legs(legs : LegsState) : Route[] {
   let routes = legs
     .valueSeq()
     .toArray()
-    .filter(leg => leg.final_leg)
+    .filter(leg => leg.is_final_leg)
     .map(leg => get_route_from_leg(legs, leg))
     .sort(
       function(x, y) {
