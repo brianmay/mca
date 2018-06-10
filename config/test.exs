@@ -12,8 +12,8 @@ config :logger, level: :warn
 # Configure your database
 config :mca, Mca.Repo,
   adapter: Ecto.Adapters.Postgres,
-  username: "postgres",
-  password: "postgres",
+  username: "mca",
+  password: "q1w2e3r4",
   database: "mca_test",
   hostname: "localhost",
   pool: Ecto.Adapters.SQL.Sandbox
