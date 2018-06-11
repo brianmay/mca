@@ -7,14 +7,16 @@ defmodule McaWeb.Router do
     plug(:fetch_flash)
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
+    plug(Mca.Auth.Pipeline)
   end
 
   pipeline :api do
     plug(:accepts, ["json"])
-  end
-
-  pipeline :auth do
+    plug(:fetch_session)
+    plug(:fetch_flash)
+    plug(:put_secure_browser_headers)
     plug(Mca.Auth.Pipeline)
+    plug(McaWeb.Context)
   end
 
   pipeline :ensure_auth do
@@ -23,21 +25,33 @@ defmodule McaWeb.Router do
 
   # Maybe logged in scope
   scope "/", McaWeb do
-    pipe_through([:browser, :auth])
+    pipe_through([:browser])
     get("/", PageController, :index)
     post("/", PageController, :login)
     get("/logout", PageController, :logout_form)
     post("/logout", PageController, :logout)
   end
 
-  # Definitely logged in scope
-  scope "/", McaWeb do
-    pipe_through([:browser, :auth, :ensure_auth])
-    get("/planner", PageController, :authenticated)
+  scope "/api" do
+    pipe_through([:api, :ensure_auth])
+    forward("/", Absinthe.Plug, schema: Mca.API.Schema)
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", McaWeb do
-  #   pipe_through :api
-  # end
+  scope "/" do
+    pipe_through([:api, :ensure_auth])
+
+    forward(
+      "/graphiql",
+      Absinthe.Plug.GraphiQL,
+      schema: Mca.API.Schema,
+      interface: :simple,
+      context: %{pubsub: Mca.Endpoint}
+    )
+  end
+
+  # Definitely logged in scope
+  scope "/", McaWeb do
+    pipe_through([:browser, :ensure_auth])
+    get("/planner", PageController, :authenticated)
+  end
 end

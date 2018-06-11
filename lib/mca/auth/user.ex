@@ -5,7 +5,9 @@ defmodule Mca.Auth.User do
 
   schema "users" do
     field(:email, :string)
-    field(:password, :string)
+    field(:password, :string, virtual: true)
+    field(:password_hash, :string)
+    field(:is_admin, :boolean)
 
     timestamps()
   end
@@ -13,13 +15,13 @@ defmodule Mca.Auth.User do
   @doc false
   def changeset(%Mca.Auth.User{} = user, attrs) do
     user
-    |> cast(attrs, [:email, :password])
-    |> validate_required([:email, :password])
+    |> cast(attrs, [:email, :password, :is_admin])
+    |> validate_required([:email, :is_admin])
     |> put_pass_hash()
   end
 
   defp put_pass_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    change(changeset, password: Bcrypt.hashpwsalt(password))
+    change(changeset, password_hash: Bcrypt.hashpwsalt(password))
   end
 
   defp put_pass_hash(changeset), do: changeset
