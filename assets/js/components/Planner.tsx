@@ -127,7 +127,7 @@ class RoutesComponent extends React.Component<RoutesProps, {}> {
 }
 
 
-export default class Home extends React.Component<{}, State> {
+export default class Planner extends React.Component<{}, State> {
   channel: Channel;
 
   constructor(props) {
