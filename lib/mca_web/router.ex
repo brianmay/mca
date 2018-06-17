@@ -52,6 +52,6 @@ defmodule McaWeb.Router do
   # Definitely logged in scope
   scope "/", McaWeb do
     pipe_through([:browser, :ensure_auth])
-    get("/planner", PageController, :authenticated)
+    get("/*path", PageController, :authenticated)
   end
 end

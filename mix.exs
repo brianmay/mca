@@ -49,7 +49,8 @@ defmodule Mca.Mixfile do
       {:bcrypt_elixir, "~> 1.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:absinthe_ecto, "~> 0.1.0"},
-      {:absinthe_plug, "~> 1.3.0"}
+      {:absinthe_plug, "~> 1.3.0"},
+      {:kronky, "~> 0.5.0"}
     ]
   end
 

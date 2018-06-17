@@ -103,19 +103,15 @@ defmodule Mca.Auth do
     User.changeset(user, %{})
   end
 
-  def authenticate_user(email, plain_text_password) do
-    query = from(u in User, where: u.email == ^email)
-
-    Repo.one(query)
-    |> check_password(plain_text_password)
-  end
-
-  defp check_password(nil, _), do: {:error, "Incorrect username or password"}
-
-  defp check_password(user, plain_text_password) do
-    case Bcrypt.checkpw(plain_text_password, user.password) do
-      true -> {:ok, user}
-      false -> {:error, "Incorrect username or password"}
+  def authenticate_user(email, password) do
+    with %User{} = user <- Repo.get_by(User, email: String.downcase(email)),
+         true <- Bcrypt.checkpw(password, user.hashed_password) do
+      {:ok, user}
+    else
+      _ ->
+        # Help to mitigate timing attacks
+        Bcrypt.dummy_checkpw()
+        {:error, :unauthorised}
     end
   end
 end

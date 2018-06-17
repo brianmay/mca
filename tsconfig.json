@@ -2,7 +2,8 @@
   "compilerOptions": {
     "baseUrl": ".",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "es2015",
+    "module": "es2015",
     "jsx": "react",
     "experimentalDecorators": true,
     "sourceMap": true,
@@ -12,6 +13,12 @@
     "paths": {
       "history": ["./node_modules/@types/history/index"],
       "react": ["./node_modules/@types/react/index"]
-    }
+    },
+    "plugins": [
+        {
+            "name": "ts-graphql-plugin",
+            "schema": "schema.json"
+        }
+    ]
   }
 }

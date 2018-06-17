@@ -1,5 +1,7 @@
 defmodule Mca.API.Schema do
   use Absinthe.Schema
+  import Kronky.Payload
+  import_types(Kronky.ValidationMessageTypes)
 
   alias Mca.API.UsersResolver
 
@@ -10,8 +12,8 @@ defmodule Mca.API.Schema do
   end
 
   input_object :update_user_params do
-    field(:name, :string)
     field(:email, :string)
+    field(:is_admin, :boolean)
     field(:password, :string)
   end
 
@@ -21,12 +23,28 @@ defmodule Mca.API.Schema do
     end
   end
 
+  payload_object(:user_payload, :user)
+
   mutation do
-    field :update_user, type: :user do
-      arg(:id, non_null(:integer))
+    field :update_user, type: :user_payload do
+      arg(:id, non_null(:id))
       arg(:user, :update_user_params)
 
       resolve(&UsersResolver.update/2)
+      middleware(&build_payload/2)
+    end
+
+    field :add_user, type: :user_payload do
+      arg(:user, :update_user_params)
+
+      resolve(&UsersResolver.add/2)
+      middleware(&build_payload/2)
+    end
+
+    field :delete_user, type: :user_payload do
+      arg(:id, non_null(:id))
+      resolve(&UsersResolver.delete/2)
+      middleware(&build_payload/2)
     end
   end
 end
