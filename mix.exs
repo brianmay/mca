@@ -33,24 +33,26 @@ defmodule Mca.Mixfile do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
-      {:phoenix, "~> 1.3.2"},
+      {:jason, "~> 1.0"},
+      {:ecto_sql, "~> 3.0"},
+      {:phoenix, "~> 1.4.0"},
       {:phoenix_pubsub, "~> 1.0"},
-      {:phoenix_ecto, "~> 3.2"},
-      {:postgrex, ">= 0.0.0"},
+      {:phoenix_ecto, "~> 4.0.0"},
+      {:postgrex, ">= 0.14.0"},
       {:phoenix_html, "~> 2.10"},
-      {:phoenix_live_reload, "~> 1.0", only: :dev},
+      {:phoenix_live_reload, "~> 1.2.0", only: :dev},
       {:gettext, "~> 0.11"},
-      {:cowboy, "~> 1.0"},
+      {:cowboy, "~> 2.6.0"},
       {:tesla, "~> 0.10.0"},
       {:poison, ">= 1.0.0"},
       {:calendar, "~> 0.17.2"},
       {:guardian, "~> 1.0"},
-      {:comeonin, "~> 4.0"},
-      {:bcrypt_elixir, "~> 1.0"},
+      {:bcrypt_elixir, "~> 2.0.0"},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:absinthe_ecto, "~> 0.1.0"},
-      {:absinthe_plug, "~> 1.3.0"},
-      {:kronky, "~> 0.5.0"}
+      {:absinthe_plug, "~> 1.4.0"},
+      {:kronky, "~> 0.5.0"},
+      {:plug_cowboy, "~> 2.0"},
     ]
   end
 

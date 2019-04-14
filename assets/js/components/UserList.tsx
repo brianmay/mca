@@ -1,12 +1,10 @@
 import * as React from 'react'
 import { Button } from 'reactstrap';
-import { graphql, createFragmentContainer } from 'react-relay';
 import User from './User';
-import { UserList_allUsers } from './__generated__/UserList_allUsers.graphql';
 
 
 interface Props {
-  allUsers: UserList_allUsers;
+  allUsers: any;
 }
 
 interface State {
@@ -69,13 +67,4 @@ class UserList extends React.Component<Props, State> {
   }
 }
 
-export default createFragmentContainer<Props>(
-  UserList,
-  graphql`
-    # As a convention, we name the fragment as '<ComponentFileName>_<PropName>'
-    fragment UserList_allUsers on User @relay(plural: true) {
-      id,
-      ... User_user
-    }
-  `
-);
+export default UserList;

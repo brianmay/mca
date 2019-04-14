@@ -35,6 +35,7 @@ defmodule Ptv.Planner do
       :arrive_real_time
     ]
 
+    @derive Jason.Encoder
     defstruct leg_id: nil,
               prev_leg_id: nil,
               first_stop_name: nil,
@@ -57,6 +58,7 @@ defmodule Ptv.Planner do
       :arrive_stop_id
     ]
 
+    @derive Jason.Encoder
     defstruct arrive_stop_id: nil,
               connections: nil
   end
@@ -81,6 +83,7 @@ defmodule Ptv.Planner do
       :connection_final_stop
     ]
 
+    @derive Jason.Encoder
     defstruct connection_time: nil,
               depart_stop_id: nil,
               route_type: nil,

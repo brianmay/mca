@@ -8,17 +8,11 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "skipDefaultLibCheck": true,
-    "lib": ["es2015", "dom"],
+    "lib": ["es2015", "esnext.asynciterable", "dom"],
     "types": ["webpack-env"],
     "paths": {
       "history": ["./node_modules/@types/history/index"],
       "react": ["./node_modules/@types/react/index"]
-    },
-    "plugins": [
-        {
-            "name": "ts-graphql-plugin",
-            "schema": "schema.json"
-        }
-    ]
+    }
   }
 }

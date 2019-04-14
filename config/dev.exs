@@ -56,7 +56,6 @@ config :phoenix, :stacktrace_depth, 20
 
 # Configure your database
 config :mca, Mca.Repo,
-  adapter: Ecto.Adapters.Postgres,
   username: "mca",
   password: "q1w2e3r4",
   database: "mca_dev",

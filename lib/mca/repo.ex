@@ -1,5 +1,5 @@
 defmodule Mca.Repo do
-  use Ecto.Repo, otp_app: :mca
+  use Ecto.Repo, otp_app: :mca, adapter: Ecto.Adapters.Postgres
 
   @doc """
   Dynamically loads the repository url from the

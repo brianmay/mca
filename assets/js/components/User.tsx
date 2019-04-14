@@ -1,29 +1,9 @@
 import * as React from 'react'
 import { Button } from 'reactstrap'
-import { Environment } from 'relay-runtime';
-import { graphql, createFragmentContainer, commitMutation } from 'react-relay';
+import gql from "graphql-tag";
 
-import environment from '../relay';
-import { User_user } from './__generated__/User_user.graphql';
-import { UpdateUserParams } from './__generated__/UserUpdateMutation.graphql';
 
-const add_mutation = graphql`
-mutation UserAddMutation($user: UpdateUserParams) {
-  addUser(user: $user) {
-    successful
-    messages {
-      field
-      message
-    }
-    result {
-      id
-      isAdmin
-      email
-    }
-  }
-}`;
-
-const update_mutation = graphql`
+const update_mutation = gql`
 mutation UserUpdateMutation($id: ID!, $user: UpdateUserParams) {
   updateUser(id: $id, user: $user) {
     successful
@@ -39,7 +19,7 @@ mutation UserUpdateMutation($id: ID!, $user: UpdateUserParams) {
   }
 }`;
 
-const delete_mutation = graphql`
+const delete_mutation = gql`
 mutation UserDeleteMutation($id: ID!) {
   deleteUser(id: $id) {
     successful
@@ -57,101 +37,16 @@ mutation UserDeleteMutation($id: ID!) {
 
 type ErrorFields = { [id: string]: string };
 
-function process_response(response, errors, onError: (error: string, fields: ErrorFields) => void, onSuccess: () => void): void {
-  console.log('Response received from server.', response, errors);
-  if (errors) {
-    onError(errors.map(value => value['message']).join(", "), {})
-  } else {
-    if (response.successful) {
-      onSuccess()
-    } else {
-      const fields = response.messages.reduce((map, error) => {
-        map[error.field] = error.message;
-        return map;
-      }, {});
-      onError("You made a mistake. Don't blame me.", fields);
-    }
-  }
-}
-
-function process_error(error, onError: (error: string, fields: ErrorFields) => void) {
-  console.log(error);
-  onError("Something went wrong. Sorry. It wasn't my fault.", {})
-}
-
-function commit_add(environment: Environment, updates: UpdateUserParams, onError: (error: string, fields: ErrorFields) => void, onSuccess: () => void): void {
-  commitMutation(
-    environment,
-    {
-      mutation: add_mutation,
-      variables: {
-        user: updates,
-      },
-      updater: (store) => {
-        const payload = store.getRootField('addUser');
-        if (payload) {
-          const user = payload.getLinkedRecord('result');
-          console.log(payload, user);
-        }
-      },
-      onCompleted: (response, errors) => {
-        process_response(response.addUser, errors, onError, onSuccess);
-      },
-      onError: err => process_error(err, onError),
-    }
-  )
-}
-
-function commit_update(environment: Environment, user: User_user, updates: UpdateUserParams, onError: (error: string, fields: ErrorFields) => void, onSuccess: () => void): void {
-  commitMutation(
-    environment,
-    {
-      mutation: update_mutation,
-      variables: {
-        id: user.id,
-        user: updates,
-      },
-      onCompleted: (response, errors) => {
-        process_response(response.updateUser, errors, onError, onSuccess);
-      },
-      onError: err => process_error(err, onError),
-    }
-  )
-}
-
-function commit_delete(environment: Environment, user: User_user, onError: (error: string, fields: ErrorFields) => void, onSuccess: () => void): void {
-  commitMutation(
-    environment,
-    {
-      mutation: delete_mutation,
-      variables: {
-        id: user.id,
-      },
-      onCompleted: (response, errors) => {
-        process_response(response.deleteUser, errors, onError, onSuccess);
-      },
-      onError: err => process_error(err, onError),
-    }
-  )
-}
-
-function commit(environment: Environment, user: User_user | null, updates: UpdateUserParams, onError: (error: string, fields: ErrorFields) => void, onSuccess: () => void): void {
-  if (user) {
-    return commit_update(environment, user, updates, onError, onSuccess);
-  } else {
-    return commit_add(environment, updates, onError, onSuccess);
-  }
-}
 
 interface Props {
-  user: User_user | null;
+  user: any | null;
   edit: boolean;
   onEdit: () => void;
   onEditDone: () => void;
 }
 
 interface State {
-  user: UpdateUserParams;
+  user: any;
   error: string | null;
   error_fields: ErrorFields;
   message: string | null;
@@ -187,12 +82,6 @@ class UserComponent extends React.Component<Props, State> {
       error_fields: {},
       message: null,
     })
-    commit(environment, this.props.user, this.state.user, (err, error_fields) => {
-      this.setState({ error: err, error_fields: error_fields, message: null });
-    }, () => {
-      this.props.onEditDone();
-      this.setState({ error: null, message: "Saved!" });
-    });
   }
 
   onDelete() {
@@ -201,12 +90,6 @@ class UserComponent extends React.Component<Props, State> {
       error_fields: {},
       message: null,
     })
-    commit_delete(environment, this.props.user, (err, error_fields) => {
-      this.setState({ error: err, error_fields: error_fields, message: null });
-    }, () => {
-      this.props.onEditDone();
-      this.setState({ error: null, message: "Deleted!" });
-    });
   }
 
   componentWillReceiveProps(nextProps: Props) {
@@ -335,14 +218,4 @@ class UserComponent extends React.Component<Props, State> {
   }
 }
 
-export default createFragmentContainer<Props>(
-  UserComponent,
-  graphql`
-    # As a convention, we name the fragment as '<ComponentFileName>_<propName>'
-    fragment User_user on User {
-      id,
-      email,
-      isAdmin
-    }
-  `
-)
+export default UserComponent;

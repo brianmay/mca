@@ -32,9 +32,11 @@ defmodule Ptv do
 
   @spec sign_url(map, term, keyword) :: map
   def sign_url(env, next, _options \\ []) do
-    env
+    env = env
     |> apply_signed_url()
     |> Tesla.run(next)
+    IO.puts(env.url)
+    env
   end
 
   @spec check_result(map) :: {:error, String.t()} | {:ok, map}

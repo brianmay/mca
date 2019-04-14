@@ -33,7 +33,7 @@ defmodule McaWeb.Router do
   end
 
   scope "/api" do
-    pipe_through([:api, :ensure_auth])
+    pipe_through([:api])
     forward("/", Absinthe.Plug, schema: Mca.API.Schema)
   end
 

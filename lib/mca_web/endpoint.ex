@@ -1,7 +1,8 @@
 defmodule McaWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :mca
 
-  socket "/socket", McaWeb.UserSocket
+  socket "/socket", McaWeb.UserSocket,
+    websocket: true
 
   # Serve at "/" the static files from "priv/static" directory.
   #

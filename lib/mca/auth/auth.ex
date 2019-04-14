@@ -5,7 +5,6 @@ defmodule Mca.Auth do
 
   import Ecto.Query, warn: false
 
-  alias Comeonin.Bcrypt
   alias Mca.Repo
   alias Mca.Auth.User
 
@@ -105,12 +104,12 @@ defmodule Mca.Auth do
 
   def authenticate_user(email, password) do
     with %User{} = user <- Repo.get_by(User, email: String.downcase(email)),
-         true <- Bcrypt.checkpw(password, user.hashed_password) do
+         true <- Bcrypt.verify_pass(password, user.password_hash) do
       {:ok, user}
     else
       _ ->
         # Help to mitigate timing attacks
-        Bcrypt.dummy_checkpw()
+        Bcrypt.no_user_verify()
         {:error, :unauthorised}
     end
   end

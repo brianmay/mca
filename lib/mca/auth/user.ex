@@ -1,7 +1,6 @@
 defmodule Mca.Auth.User do
   use Ecto.Schema
   import Ecto.Changeset
-  alias Comeonin.Bcrypt
 
   schema "users" do
     field(:email, :string)
@@ -27,7 +26,7 @@ defmodule Mca.Auth.User do
   end
 
   defp put_pass_hash(%Ecto.Changeset{valid?: true, changes: %{password: password}} = changeset) do
-    change(changeset, password_hash: Bcrypt.hashpwsalt(password))
+    change(changeset, Bcrypt.add_hash(password))
   end
 
   defp put_pass_hash(changeset), do: changeset

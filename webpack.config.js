@@ -29,7 +29,16 @@ module.exports = {
     rules: [
       {
         test: /\.tsx?$/,
-        loaders: ['awesome-typescript-loader'],
+        use: [
+            {
+                loader: 'awesome-typescript-loader',
+                options: {
+                    "useBabel": true,
+                    "babelCore": "@babel/core"
+                },
+            }
+
+        ],
         include: path.join(__dirname, 'assets/js'),
         exclude: /node_modules/
       },
@@ -56,18 +65,18 @@ module.exports = {
       }
     ]
   },
-  optimization: {
-    splitChunks: {
-      cacheGroups: {
-        styles: {
-          name: 'styles',
-          test: /\.css$/,
-          chunks: 'all',
-          enforce: true
-        }
-      }
-    }
-  },
+  // optimization: {
+  //   splitChunks: {
+  //     cacheGroups: {
+  //       styles: {
+  //         name: 'styles',
+  //         test: /\.css$/,
+  //         chunks: 'all',
+  //         enforce: true
+  //       }
+  //     }
+  //   }
+  //},
   plugins: [
     new CleanWebpackPlugin([
       path.join(__dirname, 'priv/static')

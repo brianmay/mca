@@ -1,7 +1,18 @@
 import * as React from 'react'
-import { graphql, QueryRenderer } from 'react-relay';
-import environment from '../relay'
+import gql from "graphql-tag";
+import { Query } from "react-apollo";
+
 import UserList from './UserList'
+
+const allUsers = gql`
+  query userListQuery {
+     allUsers {
+       id
+       email
+       isAdmin
+     }
+   }
+`
 
 export default class UserMeow extends React.Component<{}, {}> {
   constructor(props) {
@@ -11,30 +22,13 @@ export default class UserMeow extends React.Component<{}, {}> {
   }
   render() {
     return (
-      <div>
-        <QueryRenderer
-          environment={environment}
-          query={graphql`
-         query userListQuery {
-           allUsers {
-             id,
-             ... UserList_allUsers
-           }
-         }
-       `}
-          variables={{}}
-          render={({ error, props }) => {
-            if (error) {
-              return <div>Error!</div>;
-            }
-            if (!props) {
-              return <div>Loading...</div>;
-            }
-            // return <div>User ID: {props.allUsers[0].id}</div>;
-            return <UserList allUsers={props.allUsers} />
-          }}
-        />
-      </div>
+      <Query query={allUsers}>
+       {({ loading, error, data }) => {
+         if (loading) return <p>Loading...</p>;
+         if (error) return <p>Error :(</p>;
+         return <UserList allUsers={data.allUsers} />
+       }}
+     </Query>
     );
   }
 }
