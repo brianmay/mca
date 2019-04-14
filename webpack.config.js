@@ -28,6 +28,11 @@ module.exports = {
   module: {
     rules: [
       {
+             test: /\.mjs$/,
+             include: /node_modules/,
+             type: 'javascript/auto'
+      },
+      {
         test: /\.tsx?$/,
         use: [
             {
@@ -78,9 +83,7 @@ module.exports = {
   //   }
   //},
   plugins: [
-    new CleanWebpackPlugin([
-      path.join(__dirname, 'priv/static')
-    ]),
+    new CleanWebpackPlugin(),
     // Type checker for `awesome-typescript-loader`
     new CheckerPlugin(),
     // Add this plugin so Webpack won't output the files when anything errors
