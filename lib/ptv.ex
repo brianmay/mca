@@ -1,46 +1,14 @@
 defmodule Ptv do
   use Tesla
 
-  plug(:sign_url)
+  plug(Ptv.Sign)
   plug(Tesla.Middleware.BaseUrl, "https://timetableapi.ptv.vic.gov.au")
-  plug(Tesla.Middleware.Headers, %{"User-Agent" => "tesla"})
+  plug(Tesla.Middleware.Headers, ["User-Agent": "tesla"])
   plug(Tesla.Middleware.JSON)
 
-  @spec get_signed_url(String.t(), list()) :: String.t()
-  defp get_signed_url(url, query) do
-    dev_id = Application.fetch_env!(:mca, :dev_id)
-    key = Application.fetch_env!(:mca, :key)
-
-    query = Keyword.put(query, :devid, dev_id)
-    url = Tesla.build_url(url, query)
-
-    signature =
-      :crypto.hmac(:sha, key, url)
-      |> Base.encode16()
-      |> String.downcase()
-
-    query = %{:signature => signature}
-    Tesla.build_url(url, query)
-  end
-
-  @spec apply_signed_url(map) :: map
-  defp apply_signed_url(env) do
-    env
-    |> Map.put(:url, get_signed_url(env.url, env.query))
-    |> Map.put(:query, [])
-  end
-
-  @spec sign_url(map, term, keyword) :: map
-  def sign_url(env, next, _options \\ []) do
-    env = env
-    |> apply_signed_url()
-    |> Tesla.run(next)
-    IO.puts(env.url)
-    env
-  end
 
   @spec check_result(map) :: {:error, String.t()} | {:ok, map}
-  defp check_result(result) do
+  defp check_result({:ok, result}) do
     case result.status do
       200 ->
         {:ok, result.body}
@@ -57,6 +25,8 @@ defmodule Ptv do
         {:error, Map.get(result.body, "Message")}
     end
   end
+
+  defp check_result({:error, _}=error), do: error
 
   @spec format_datetime(DateTime.t()) :: String.t()
   defp format_datetime(datetime) do

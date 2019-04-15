@@ -43,8 +43,7 @@ defmodule Mca.Mixfile do
       {:phoenix_live_reload, "~> 1.2.0", only: :dev},
       {:gettext, "~> 0.11"},
       {:cowboy, "~> 2.6.0"},
-      {:tesla, "~> 0.10.0"},
-      {:poison, ">= 1.0.0"},
+      {:tesla, "~> 1.2.0"},
       {:calendar, "~> 0.17.2"},
       {:guardian, "~> 1.0"},
       {:bcrypt_elixir, "~> 2.0.0"},
@@ -53,6 +52,7 @@ defmodule Mca.Mixfile do
       {:absinthe_plug, "~> 1.4.0"},
       {:kronky, "~> 0.5.0"},
       {:plug_cowboy, "~> 2.0"},
+      {:hackney, "~> 1.10"},
     ]
   end
 
