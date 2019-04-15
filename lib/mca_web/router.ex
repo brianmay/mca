@@ -34,7 +34,7 @@ defmodule McaWeb.Router do
 
   scope "/api" do
     pipe_through([:api])
-    forward("/", Absinthe.Plug, schema: Mca.API.Schema)
+    forward("/", Absinthe.Plug, schema: Mca.API.Schema, json_codec: Jason)
   end
 
   scope "/" do
@@ -45,7 +45,8 @@ defmodule McaWeb.Router do
       Absinthe.Plug.GraphiQL,
       schema: Mca.API.Schema,
       interface: :simple,
-      context: %{pubsub: Mca.Endpoint}
+      context: %{pubsub: Mca.Endpoint},
+      json_codec: Jason
     )
   end
 
